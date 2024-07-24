@@ -14,7 +14,7 @@ IMPORTANT NOTES about this training script
 -we expect the forward pass to return logits
 -we pass logits into the criterion
 '''
-def plot_combined_metrics(lossi, devlossi, f1i, devf1i, name):
+def plot_combined_metrics(lossi, devlossi, f1i, devf1i):
     plt.figure(figsize=(12, 6))
     
     # Plot losses
@@ -34,9 +34,10 @@ def plot_combined_metrics(lossi, devlossi, f1i, devf1i, name):
     plt.xlabel('Epochs')
     plt.ylabel('F1 Score')
     plt.legend()
+
     
     plt.tight_layout()
-    plt.savefig(f"{name}_train_metrics.png")
+    plt.savefig(f"{MODEL_NAME}_{TRAIN_ID}_metrics.png")
     plt.close()
 
 
@@ -95,21 +96,24 @@ def train(model, train_loader, test_loader, criterion, optimizer, device, epochs
             devf1i.append(test_epoch_f1 / len(test_loader))
 
         if (epoch+1) % 2 == 0:
-            plot_combined_metrics(lossi, devlossi, f1i, devf1i, 'test')
+            plot_combined_metrics(lossi, devlossi, f1i, devf1i)
 
 
 
 
 
 def main():
-    if len(sys.argv) < 4 or len(sys.argv) > 5:
-        print("WRONG Usage: python script.py <model_path> <data_path> <batch_size> <epochs>(OPTIONAL DEF=50)")
+    if len(sys.argv) < 5 or len(sys.argv) > 6:
+        print("WRONG Usage: python script.py <model_path> <data_path> <batch_size> <training_id> <epochs>(OPTIONAL DEF=50)")
         sys.exit(1)
     model_path = sys.argv[1]
     data_path = sys.argv[2]
     batch_size = int(sys.argv[3])
-    if len(sys.argv) == 5:
-        epochs = int(sys.argv[4])
+    TRAIN_ID = sys.argv[4]
+    if len(sys.argv) == 6:
+        epochs = int(sys.argv[5])
+    else:
+        epochs = 15
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
@@ -123,6 +127,7 @@ def main():
     
     model=torch.load(model_path)
     train_loader = load_data(data_path, batch_size)
+    test_loader = load_data(data_path, batch_size)
 
 
     ''' REMEBER we pass logits'''
@@ -130,12 +135,13 @@ def main():
     optimizer = optim.Adam(model.parameters())
 
     #Time to Train !!!!
-    train(model, train_loader, criterion, optimizer, device, epochs)
+    train(model, train_loader, test_loader, criterion, optimizer, device, epochs)
 
     #save model
-    model_name = "mr_trained"
-    torch.save(model.state_dict(), f'{model_name}.pth')
-    print(f"Training completed. Model saved as '{trained_model}.pth'")
+    MODEL_NAME = "mr_trained"
+    torch.save(model.state_dict(), f'{MODEL_NAME}_{TRAIN_ID}.pth')
+    print(f"Training completed. Model saved as '{MODEL_NAME}_{TRAIN_ID}.pth'")
+
 
 
 
