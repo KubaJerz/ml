@@ -34,7 +34,7 @@ The `train` function:
 - Trains the model for a specified number of epochs.
 - Computes loss and F1 score for both training and validation sets.
 - Plots metrics every 2 epochs.
-- <span style="color:pink;"> **NOTE**  </span> the tl02 version is built for **multi-class** 
+- <span style="color:pink;"> **NOTE**  </span> the tl02 version is built for **multi-class** *it assumes that the model has a `.num_classes` atribute used for the f1 score calc*
 
 #### Metric Visualization
 
