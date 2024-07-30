@@ -82,7 +82,7 @@ def train(model, train_loader, test_loader, criterion, optimizer, device, epochs
             logits = model.forward(X_batch)
 
             loss = criterion(logits, y_batch)
-            f1 = 5 #multiclass_f1_score(logits, y_batch, num_classes=model.num_classes).item()
+            f1 = multiclass_f1_score(logits, y_batch, num_classes=model.num_classes).item()
 
             loss.backward()
             optimizer.step()
@@ -103,7 +103,7 @@ def train(model, train_loader, test_loader, criterion, optimizer, device, epochs
 
                 devlogits = model.forward(X_batch)
                 dev_loss = criterion(devlogits, y_batch).item()
-                dev_f1 = 3 #multiclass_f1_score(devlogits, y_batch, num_classes=model.num_classes).item() 
+                dev_f1 = multiclass_f1_score(devlogits, y_batch, num_classes=model.num_classes).item() 
                 test_epoch_loss += dev_loss
                 test_epoch_f1 += dev_f1
 
@@ -181,10 +181,6 @@ def main():
     #save model
     torch.save(model, f'{MODEL_NAME}_{TRAIN_ID}.pth')
     print(f"Training completed. Model saved as '{MODEL_NAME}_{TRAIN_ID}.pth'")
-
-
-
-
 
 
 if __name__ == "__main__":
