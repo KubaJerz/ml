@@ -51,7 +51,7 @@ The `plot_combined_metrics` function creates and saves plots for:
 7. Save the trained model (save at location of the training script)
 
 ### Usage
-```python script_name.py <training_id> <model_path> <data_path> --train_batch_size <size> [optionl args...] ```
+```python tl02.py <training_id> <model_path> <data_path> --train_batch_size <size> [optionl args...] ```
 
 
 #### Arguments
