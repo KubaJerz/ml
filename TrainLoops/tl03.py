@@ -3,6 +3,7 @@ import argparse
 import torch.nn  as nn
 import torch.optim as optim
 import sys
+import json
 import os
 from torch.utils.data import Dataset
 
@@ -16,6 +17,8 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 from torcheval.metrics.functional import multiclass_f1_score, binary_f1_score
 import importlib.util
+import glob
+
 
 '''
 IMPORTANT NOTES about this training script
@@ -45,8 +48,13 @@ def plot_combined_metrics(lossi, devlossi, f1i, devf1i):
 
     
     plt.tight_layout()
-    plt.savefig(f"{MODEL_NAME}_{TRAIN_ID}_metrics.png")
+    plt.savefig(os.path.join(SAVE_DIR,f"{MODEL_NAME}_{TRAIN_ID}_metrics.png"))
     plt.close()
+
+
+def save_metrics(metrics, filename):
+    with open(filename, 'w') as f:
+        json.dump(metrics, f)
 
 
 def load_data(data_path, batch_size):
@@ -63,11 +71,7 @@ def load_data(data_path, batch_size):
     
     return DataLoader(dataset, batch_size=batch_size, shuffle=False)
     
-def train(model, train_loader, test_loader, criterion, optimizer, device, epochs):
-    lossi = [] #train_losses
-    devlossi = [] #val_losses
-    f1i = []  #train_f1_scores
-    devf1i = [] #val_f1_scores
+def train(model, train_loader, test_loader, criterion, optimizer, device, epochs, metrics):
 
     model = model.to(device)
     
@@ -91,8 +95,8 @@ def train(model, train_loader, test_loader, criterion, optimizer, device, epochs
             epoch_f1 += f1
 
 
-        lossi.append(epoch_loss / len(train_loader))  # append avg loss per epoch
-        f1i.append(epoch_f1 / len(train_loader))  # append avg f1 per epoch
+        metrics['train_loss'].append(epoch_loss / len(train_loader))
+        metrics['train_f1'].append(epoch_f1 / len(train_loader))  # append avg f1 per epoch
 
 
         with torch.no_grad():
@@ -107,11 +111,41 @@ def train(model, train_loader, test_loader, criterion, optimizer, device, epochs
                 test_epoch_loss += dev_loss
                 test_epoch_f1 += dev_f1
 
-            devlossi.append(test_epoch_loss / len(test_loader))
-            devf1i.append(test_epoch_f1 / len(test_loader))
+            metrics['dev_loss'].append(test_epoch_loss / len(test_loader))
+            metrics['dev_f1'].append(test_epoch_f1 / len(test_loader))
 
         if (epoch+1) % 2 == 0:
-            plot_combined_metrics(lossi, devlossi, f1i, devf1i)
+            plot_combined_metrics(metrics['train_loss'], metrics['dev_loss'], 
+                                  metrics['train_f1'], metrics['dev_f1'])
+            
+    return metrics
+    
+def extract_metrics(directory):
+    metrics_data = []
+
+    # Search for files matching the pattern *_metrics.json
+    file_pattern = os.path.join(directory, '*_metrics.json')
+    files = glob.glob(file_pattern)
+
+    if not files:
+        print(f"No previous metrics files found in {directory}")
+        return {}
+    
+    file_path = files[0]
+
+    try:
+        with open(file_path, 'r') as file:
+            metrics = json.load(file)
+        return metrics
+    except FileNotFoundError:
+        print(f"Error: File not found at {file_path}")
+        return {}
+    except json.JSONDecodeError:
+        print(f"Error: Invalid JSON in file {file_path}")
+        return {}
+    except Exception as e:
+        print(f"An unexpected error occurred: {str(e)}")
+        return {}
 
 def main():
     parser = argparse.ArgumentParser(description="Basic train script")
@@ -141,17 +175,24 @@ def main():
     print("Epochs: ",args.epochs)
 
     if is_resume:
-        print("We are resooming training of model found at: ",model_path,'\n\n')
+        print("We are resuming training of model found at: ",model_path,'\n\n')
         model=torch.load(model_path) #TO BE UPDATED TO LOAD FROM STATE DIC AT A LATER DATE
 
         dir_path, file_name = os.path.split(model_path)
         model_name = (file_name.split('.')[0]).upper() 
+        metrics = extract_metrics(dir_path)
     else:
         print("We are training a NEW model defined at: ",model_path,'\n\n')
         dir_path, file_name = os.path.split(model_path)
         module_name = (file_name.split('.')[0]) #all we doing here is taking someting like /usr/kuba/.../modeldef.py and returning modeldef
         model_name = (file_name.split('.')[0]).upper() #all we doing here is taking someting like /usr/kuba/.../modeldef.py and returning MODELDEF
         
+        metrics = {
+            'train_loss': [],
+            'dev_loss': [],
+            'train_f1': [],
+            'dev_f1': []
+        }
 
         sys.path.append(dir_path)  #import the module
         module = importlib.import_module(module_name)
@@ -163,6 +204,10 @@ def main():
     TRAIN_ID = args.training_id
     global MODEL_NAME
     MODEL_NAME = model_name
+
+    global SAVE_DIR
+    SAVE_DIR = os.path.join('.', f'{TRAIN_ID}_{MODEL_NAME}')
+    os.makedirs(SAVE_DIR, exist_ok=False)
 
 
 
@@ -176,13 +221,14 @@ def main():
     optimizer = optim.Adam(model.parameters())
 
     #Time to Train !!!!
-    train(model, train_loader, test_loader, criterion, optimizer, device, args.epochs)
+    metrics = train(model, train_loader, test_loader, criterion, optimizer, device, args.epochs, metrics)
 
     #save model
-    os.mkdir(os.join('.',f'{TRAIN_ID}_{MODEL_NAME}'))
-    torch.save(model, f'{MODEL_NAME}_{TRAIN_ID}.pth')
-    print(f"Training completed. Model saved as '{MODEL_NAME}_{TRAIN_ID}.pth'")
-
+    model_path = os.path.join(SAVE_DIR, f'{MODEL_NAME}_{TRAIN_ID}.pth')
+    torch.save(model, model_path)
+    metrics_path = os.path.join(SAVE_DIR, f'{MODEL_NAME}_{TRAIN_ID}_metrics.json')
+    save_metrics(metrics, metrics_path)
+    print(f"Training completed. Model saved as '{model_path}' and metrics saved as '{metrics_path}'.")
 
 if __name__ == "__main__":
     main()
