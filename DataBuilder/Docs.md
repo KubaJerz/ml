@@ -5,16 +5,10 @@
 
 
 
-## Description for 0_csv_builder.ipynb (0_csv_builder.ipynb)
+## Description for CSV Builder (0_csv_builder.ipynb)
 
 This Jupyter Notebook serves as a template for creating and saving PyTorch dataset objects from raw data CSV. The datasets are saved as pickle/(DILL) files, which can be easily loaded into the training script.
 
-### Overview
-
-This template demonstrates how to:
-1. Load raw data from a CSV file
-2. Create separate training and testing datasets via random perputation
-3. Save these datasets as pickle files for later use in a PyTorch training pipeline
 
 ### Dependencies
 
@@ -58,7 +52,7 @@ Run the notebook to create and save your datasets
 
 
 
-```
+```python
 train_set = TrainDataSet(raw_data_path, train_percent, labels_col)
 test_set = TestDataSet(raw_data_path, train_percent, labels_col, train_set.rows)
 save_dataset(train_set, path_to_save_dir, 'train.pkl')
@@ -67,21 +61,13 @@ save_dataset(test_set, path_to_save_dir, 'test.pkl')
 
 
 
-## Description for 0_tensor_builder (0_tensor_builder.ipynb)
+## Description for Tensor Builder (0_tensor_builder.ipynb)
 
 This Jupyter Notebook serves as a template for creating and saving PyTorch dataset objects from raw data pt files. The datasets are saved as pickle/(DILL) files, which can be easily loaded into the training script.
-
-### Overview
-
-This template demonstrates how to:
-1. Load raw data from a pt file
-2. Create separate training and testing datasets via random perputation
-3. Save these datasets as pickle files for later use in a PyTorch training pipeline
 
 ### Dependencies
 
 - torch
-- pandas
 - dill (as a replacement for pickle its better)
 
 ### Key Components
@@ -91,7 +77,6 @@ This template demonstrates how to:
 Adjust these variables according to your specific dataset:
 
 ```python
-labels_col = 13  # Column index for labels
 raw_data_path = 'Data/Raw/heart.pt'  # Absolute path to raw data
 train_percent = 0.7  # Percentage of data for training
 test_percent = 1 - train_percent
@@ -124,4 +109,21 @@ test_set = TestDataSet(raw_data_path, train_percent, train_set.rows)
 
 save_dataset(train_set, path_to_save_dir, 'train.pkl')
 save_dataset(test_set, path_to_save_dir, 'test.pkl')
+```
+
+## Description for Multi Tensor Builder (0_multiTensor_builder.ipynb)
+
+This Jupyter Notebook serves as a template for creating and saving PyTorch dataset objects from <ins>MULTIPLE</ins> raw data pt files. The datasets are saved as pickle/(DILL) files, which can be easily loaded into the training script.
+
+### Overview
+
+To use this template you need to jsut pass in the below paths to the data:
+
+
+```python
+raw_data_dir = '/home/kuba/Documents/Data/Raw/RatEEG_R/'     #THIS NEEDS TO BE ABSOLUTE PATH
+train_percent = 0.7
+test_percent = 1 - train_percent
+path_to_save_dir = '/home/kuba/Documents/Data/Datasets/RatEEG_D/DS01' #path to save the data too
+
 ```
