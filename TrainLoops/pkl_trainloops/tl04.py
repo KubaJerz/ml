@@ -27,29 +27,7 @@ IMPORTANT NOTES about this training script
 '''
 def plot_combined_metrics(lossi, devlossi, f1i, devf1i, best_f1_dev, best_loss_dev):
     plt.figure(figsize=(12, 6))
-    
-    # Plot losses
-    # plt.subplot(1, 2, 1)
-    # plt.plot(lossi, label='Train Loss')
-    # plt.plot(devlossi, label='Validation Loss')
-    # plt.title('Loss vs Epochs')
-    # plt.xlabel('Epochs')
-    # plt.ylabel('Loss')
-    # plt.text(0,-70,best_loss_dev)
-    # plt.axhline(best_loss_dev) #horizontal line where best loss is 
-    # print(best_loss_dev)
-    # plt.legend()
-    
-    # # Plot F1 scores
-    # plt.subplot(1, 2, 2)
-    # plt.plot(f1i, label='Train F1')
-    # plt.plot(devf1i, label='Validation F1')
-    # plt.title('F1 Score vs Epochs')
-    # plt.xlabel('Epochs')
-    # plt.ylabel('F1 Score')
-    # plt.text(0,-70,best_f1_dev) #horizontal line where best f1 is 
-    # plt.axhline(best_f1_dev)
-    # plt.legend()
+
     plt.subplot(1, 2, 1)
     plt.plot(lossi, label='Train Loss')
     plt.plot(devlossi, label='Validation Loss')

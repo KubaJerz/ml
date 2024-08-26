@@ -1,6 +1,6 @@
-# Dataset Creation Templates for PyTorch Training
+# pklMaker Dataset  Templates
 
-
+## All these will save the final dataset as a pkl file. 
 
 
 

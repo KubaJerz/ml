@@ -6,7 +6,7 @@ This python script will need to be customized for each uscase.
 The genrla idea is tpo abstract away the dataset creation so in the training loop you can just do the following:
 
 ```python
-from 0_tensor_builder.py import getDataSet
+from tensor_builder.py import getDataSet
 train_dataset, test_dataset = getDataSet()
 ````
 ### Key Components
@@ -29,7 +29,7 @@ Modify the configuration variables to match your dataset:
 
 Run the script to get the train/test split:
 ```python
-from 0_tensor_builder.py import getDataSet
+from tensor_builder.py import getDataSet
 train_dataset, test_dataset = getDataSet()
 #also valid is 
 train_dataset, test_dataset = getDataSet(randomState=59, trainPercent=0.8)
