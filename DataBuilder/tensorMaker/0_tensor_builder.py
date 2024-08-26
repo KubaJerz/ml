@@ -29,7 +29,6 @@ class CombinedDataSet(Dataset):
 
 def create_combined_dataset():
     raw_data_dir = '/home/kuba/Documents/Data/Raw/RatEEG_R/' #THIS NEEDS TO BE ABSOLUTE PATH
-    path_to_save_dir = '/home/kuba/Documents/Data/Datasets/RatEEG_D/DS02' #path to save the data too
 
     all_datasets = []
     for file_name in tqdm(sorted(os.listdir(raw_data_dir))):
@@ -40,12 +39,12 @@ def create_combined_dataset():
 
     return ConcatDataset(all_datasets)
 
-def getDataSet(randomState=69, train_percent=0.7):
+def getDataSet(randomState=69, trainPercent=0.7):
     combined_dataset = create_combined_dataset()
 
     # split into train and test
     total_size = len(combined_dataset)
-    train_size = int(train_percent * total_size)
+    train_size = int(trainPercent * total_size)
     test_size = total_size - train_size
 
     generator = torch.Generator().manual_seed(randomState)
