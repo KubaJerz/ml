@@ -193,7 +193,8 @@ def main():
     parser.add_argument("--train_percent", type=float, default=0.7, help="Percentage of data to use for training (default: 0.7)")
     parser.add_argument("--random_state", type=int, default=69, help="Random state for dataset split (default: 69)")
     parser.add_argument("--train_batch_size", "-trbs", type=int, required=True, help="Batch size for training (required), (-1) t do full batch")
-    parser.add_argument("--test_batch_size", "-tebs",type=int, default=-1, help="Batch size for testing. If not present, uses full batch (-1)")    parser.add_argument("--epochs", type=int, default=15, help="Number of epochs (default: 15)")
+    parser.add_argument("--test_batch_size", "-tebs",type=int, default=-1, help="Batch size for testing. If not present, uses full batch (-1)")    
+    parser.add_argument("--epochs", type=int, default=15, help="Number of epochs (default: 15)")
     
     # Group to handle the resume options
     resume_group = parser.add_mutually_exclusive_group(required=False)
