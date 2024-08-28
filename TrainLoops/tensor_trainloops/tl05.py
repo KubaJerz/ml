@@ -252,7 +252,7 @@ def main():
     os.makedirs(SAVE_DIR, exist_ok=True)
 
     # Use the new getDataSet function
-    train_dataset, test_dataset = getDataSet(randomState=args.random_state, train_percent=args.train_percent)
+    train_dataset, test_dataset = getDataSet(randomState=args.random_state, trainPercent=args.train_percent)
 
     train_loader = DataLoader(train_dataset, batch_size=args.train_batch_size, shuffle=True)
     test_loader = DataLoader(test_dataset, batch_size=args.test_batch_size, shuffle=False)

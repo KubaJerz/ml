@@ -17,6 +17,7 @@ import os
 class CombinedDataSet(Dataset):
     def __init__(self, raw_data_path):
         X, y = torch.load(raw_data_path)
+        X = X.unsqueeze(1)
         self.x = X
         self.y = y
         self.n_samples = len(self.x)
