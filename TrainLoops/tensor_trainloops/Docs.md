@@ -16,7 +16,6 @@ This script provides a basic framework for training neural network models using 
 -    `--test_batch_size` or `-tebs`: Batch size for testing (default: full batch (-1)).
 -  `--train_percent`: Percentage of data to use for training (default: 0.7)
 - `--random_state`: Random state for dataset split (default: 69)
--    `--test_batch_size` or `-tebs`: Batch size for testing (default: full batch (-1)).
 -    `--epochs`:  Number of training epochs (default: 15).
 -    `--resume` or `-r`: Flag to resume training from a saved model. Requires one of the following:
         - `-full`: Resume from the very end of the last model's training.
