@@ -1,21 +1,41 @@
 from tqdm import tqdm
 import random
+import argparse
+import os
+from model import MODEL #this is the base model that when passed in new hyper params will create new models
+from TrainWrappers.tl06 import 
+import torch
 
-def def_model(hyperparams):
+def def_model(hyperparams, experimet_dir, input_channel, out_sz):
+    sub_dir = os.path.join(experimet_dir,hyperparams['id'])
+    os.path.mkdir(sub_dir,exist_ok=False)
+
+    model = MODEL(input_channels=input_channel, output_size=out_sz, hyperparams=hyperparams)
+
+    return model, sub_dir
+
+def train_model(hyperparams, model, data_path, sub_dir):
+
     
 
 
 def main():
     parser = argparse.ArgumentParser(description="train wrapper")
     parser.add_argument("id", type=str, help="ID")
+    parser.add_argument("data_path", type=str, help="Path to the dir with test and train data pt files")
     parser.add_argument("--num_models", type=int, default=5, help="Number of models to train (default: 5)")
     parser.add_argument("--epochs", type=int, default=50, help="Number of epochs (default: 50)")
 
 
     args = parser.parse_args()
     id = args.id
+    data_path = os.path.abspath(args.data_path)
     num_models = args.num_models
     epochs = args.epochs
+
+    '''________________ADJUST THESES___________________'''
+    input_channel = 1
+    output_sz = 3
 
     hyper_ranges = {
         'train_batch_size': [32,64,128,256,512],
@@ -27,6 +47,10 @@ def main():
         'normalization': ['batch', 'layer']#['none', 'batch', 'layer']
     }
     test_batch_size = -1
+
+    '''____________________________________________'''
+
+    experimet_dir = os.path.join(os.cwd(),f'{id}')
 
     for i in tqdm(range(num_models)):
         #random pick
@@ -44,8 +68,8 @@ def main():
         }
 
 
-        def_model(hyperparams)
-        train_model(hyperparams['id'])
+        model, sub_dir = def_model(hyperparams=hyperparams, experimet_dir=experimet_dir, input_channel=input_channel, out_sz=output_sz)
+        train_model(hyperparams=hyperparams, model=model, data_path=data_path, sub_dir=sub_dir)
 
 if __name__ == "__main__":
     main()
