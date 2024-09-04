@@ -74,7 +74,7 @@ def train(model, train_loader, test_loader, criterion, optimizer, device, epochs
             logits = model.forward(X_batch)
 
             loss = criterion(logits, y_batch)
-            f1 = multiclass_f1_score(logits, torch.argmax(y_batch, dim=1), num_classes=model.num_classes, average="macro").item()
+            f1 = multiclass_f1_score(logits, torch.argmax(y_batch, dim=1), num_classes=model.num_classes).item()
 
             loss.backward()
             optimizer.step()
@@ -95,7 +95,7 @@ def train(model, train_loader, test_loader, criterion, optimizer, device, epochs
 
                 devlogits = model.forward(X_batch)
                 dev_loss = criterion(devlogits, y_batch).item()
-                dev_f1 = multiclass_f1_score(devlogits, torch.argmax(y_batch, dim=1), num_classes=model.num_classes, average="macro").item() 
+                dev_f1 = multiclass_f1_score(devlogits, torch.argmax(y_batch, dim=1), num_classes=model.num_classes).item() 
                 test_epoch_loss += dev_loss
                 test_epoch_f1 += dev_f1
 
@@ -189,7 +189,6 @@ def run_training(
     model_path,
     sub_dir,
     train_percent=0.7,
-    lr=0.001,
     random_state=69,
     train_batch_size=32,
     test_batch_size=-1,
@@ -199,6 +198,10 @@ def run_training(
     f1=False,
     loss=False,
 ):
+    global MODEL_NAME
+    global SAVE_DIR
+    global TRAIN_ID
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
 
@@ -238,11 +241,9 @@ def run_training(
 
             model = model_class()
 
-        
-        global MODEL_NAME
         MODEL_NAME = model_name
-        global SAVE_DIR
         SAVE_DIR = os.path.join('.', f'{training_id}_{model_name}') #we save the model diffrently if we are doing comman line sinlge model
+    
     else:
         metrics = {
                 'train_loss': [],
@@ -254,36 +255,33 @@ def run_training(
             }
 
         model = model_path
-        global SAVE_DIR
         SAVE_DIR = sub_dir
 
-        global MODEL_NAME
         MODEL_NAME = 'no_name'
 
 
-    os.makedirs(save_dir, exist_ok=True)
+    os.makedirs(SAVE_DIR, exist_ok=True)
 
     train_dataset, test_dataset = getDataSet(randomState=random_state, trainPercent=train_percent)
 
-    if test_batch_size == -1:
-        test_batch_size = len(test_dataset)
     if train_batch_size == -1:
         train_batch_size = len(train_dataset)
+    if test_batch_size == -1:
+        test_batch_size = len(test_dataset)
 
-    global TRAIN_ID
     TRAIN_ID = training_id
 
-    train_loader = DataLoader(train_dataset, batch_size=train_batch_size, shuffle=False)
+    train_loader = DataLoader(train_dataset, batch_size=train_batch_size, shuffle=True)
     test_loader = DataLoader(test_dataset, batch_size=test_batch_size, shuffle=False)
 
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=lr)
+    optimizer = optim.Adam(model.parameters())
 
-    metrics = train(model, train_loader, test_loader, criterion, optimizer, device, epochs, metrics, metrics['best_f1_dev'], metrics['best_loss_dev'], save_dir, model_name, training_id)
+    metrics = train(model, train_loader, test_loader, criterion, optimizer, device, epochs, metrics, metrics['best_f1_dev'], metrics['best_loss_dev'])
 
-    model_path = os.path.join(save_dir, f'{model_name}_{training_id}.pth')
+    model_path = os.path.join(SAVE_DIR, f'{model_name}_{training_id}.pth')
     torch.save(model, model_path)
-    metrics_path = os.path.join(save_dir, f'{model_name}_{training_id}_metrics.json')
+    metrics_path = os.path.join(SAVE_DIR, f'{model_name}_{training_id}_metrics.json')
     save_metrics(metrics, metrics_path)
     print(f"Training completed. Model saved as '{model_path}' and metrics saved as '{metrics_path}'.")
 

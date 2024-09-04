@@ -12,28 +12,36 @@ class MODEL(nn.Module):
 
         layers = []
         in_channels = input_channels
+        seq_length = 1000
+        
 
-        for block, block_layers in enumerate(self.layer_depth):
-            for layer, out_channels in enumerate(block_layers):
-                stride = 2 if layer == 0 else 1
-                layers.append(nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1))
-                
+        for block in range(self.hidden_blocks):
+            for block_layer, out_channels in enumerate(self.layer_depth):
+                stride = 2 if block_layer == 0 else 1
+                layers.append(nn.Conv1d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1))
+                seq_length = (seq_length + 2 * 1 - (3 - 1) - 1) // stride + 1
+
                 if self.normalization == 'batch':
-                    layers.append(nn.BatchNorm2d(out_channels))
+                    layers.append(nn.BatchNorm1d(out_channels))
                 elif self.normalization == 'layer':
-                    layers.append(nn.LayerNorm(1, out_channels))
-                
+                    layers.append(nn.LayerNorm([out_channels, seq_length]))
+
                 layers.append(self.activation)
                 
                 if self.dropout_rate > 0:
-                    layers.append(nn.Dropout2d(self.dropout_rate))
+                    layers.append(nn.Dropout1d(self.dropout_rate))
                 
                 in_channels = out_channels
 
         self.feature_extractor = nn.Sequential(*layers)
 
 
-        self.fc1 = nn.Linear(in_channels * (32 // (2 ** len(self.layer_depth))) ** 2, 1000)
+        with torch.no_grad():
+            dummy_input = torch.zeros(1, input_channels, 1000)
+            dummy_output = self.feature_extractor(dummy_input)
+            flattened_size = dummy_output.numel()
+        
+        self.fc1 = nn.Linear(flattened_size, 1000)
         self.fc2 = nn.Linear(1000, output_size)
 
     def forward(self, x):
