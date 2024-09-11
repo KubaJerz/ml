@@ -74,7 +74,7 @@ def train(model, train_loader, test_loader, criterion, optimizer, device, epochs
             logits = model.forward(X_batch)
 
             loss = criterion(logits, y_batch)
-            f1 = multiclass_f1_score(logits, torch.argmax(y_batch, dim=1), num_classes=model.num_classes).item()
+            f1 = multiclass_f1_score(logits, torch.argmax(y_batch, dim=1), num_classes=model.num_classes, average="micro").item()
 
             loss.backward()
             optimizer.step()
@@ -95,7 +95,7 @@ def train(model, train_loader, test_loader, criterion, optimizer, device, epochs
 
                 devlogits = model.forward(X_batch)
                 dev_loss = criterion(devlogits, y_batch).item()
-                dev_f1 = multiclass_f1_score(devlogits, torch.argmax(y_batch, dim=1), num_classes=model.num_classes).item() 
+                dev_f1 = multiclass_f1_score(devlogits, torch.argmax(y_batch, dim=1), num_classes=model.num_classes, average="micro").item() 
                 test_epoch_loss += dev_loss
                 test_epoch_f1 += dev_f1
 
@@ -279,9 +279,9 @@ def run_training(
 
     metrics = train(model, train_loader, test_loader, criterion, optimizer, device, epochs, metrics, metrics['best_f1_dev'], metrics['best_loss_dev'])
 
-    model_path = os.path.join(SAVE_DIR, f'{model_name}_{training_id}.pth')
+    model_path = os.path.join(SAVE_DIR, f'{MODEL_NAME}_{TRAIN_ID}.pth')
     torch.save(model, model_path)
-    metrics_path = os.path.join(SAVE_DIR, f'{model_name}_{training_id}_metrics.json')
+    metrics_path = os.path.join(SAVE_DIR, f'{MODEL_NAME}_{TRAIN_ID}_metrics.json')
     save_metrics(metrics, metrics_path)
     print(f"Training completed. Model saved as '{model_path}' and metrics saved as '{metrics_path}'.")
 

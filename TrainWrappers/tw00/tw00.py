@@ -5,12 +5,17 @@ import os
 from model import MODEL #this is the base model that when passed in new hyper params will create new models
 from tl06 import run_training
 import torch
+import json
 
-def def_model(hyperparams, experimet_dir, input_channel, out_sz):
+def def_model(hyperparams, experimet_dir, input_channel, out_sz, num_classes):
     sub_dir = os.path.join(experimet_dir,hyperparams['id'])
     os.makedirs(sub_dir,exist_ok=False)
 
-    model = MODEL(input_channels=input_channel, output_size=out_sz, hyperparams=hyperparams)
+    model = MODEL(input_channels=input_channel, output_size=out_sz, hyperparams=hyperparams, num_classes=num_classes)
+    
+    ttx_file_path = os.path.join(sub_dir, "hyperparams.txt")
+    with open(ttx_file_path, 'w') as ttx_file:
+        json.dump(hyperparams, ttx_file, indent=4)
 
     return model, sub_dir
 
@@ -37,6 +42,7 @@ def main():
     '''________________ADJUST THESES___________________'''
     input_channel = 1
     output_sz = 3
+    num_classes = 3
 
     hyper_ranges = {
         'train_batch_size': [32,64,128,256,512],
@@ -69,7 +75,7 @@ def main():
         }
 
 
-        model, sub_dir = def_model(hyperparams=hyperparams, experimet_dir=experimet_dir, input_channel=input_channel, out_sz=output_sz)
+        model, sub_dir = def_model(hyperparams=hyperparams, experimet_dir=experimet_dir, input_channel=input_channel, out_sz=output_sz, num_classes=num_classes)
         train_model(hyperparams=hyperparams, model=model, sub_dir=sub_dir, epochs=epochs)
 
 if __name__ == "__main__":

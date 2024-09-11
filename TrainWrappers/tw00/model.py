@@ -2,13 +2,14 @@ import torch
 import torch.nn as nn
 
 class MODEL(nn.Module):
-    def __init__(self, input_channels, output_size, hyperparams):
+    def __init__(self, input_channels, output_size, hyperparams, num_classes):
         super(MODEL, self).__init__()
         self.hidden_blocks = hyperparams['hidden_blocks']
         self.layer_depth = hyperparams['layer_depth']
         self.dropout_rate = hyperparams['dropout_rate']
         self.activation = getattr(nn, hyperparams['activation'])()
         self.normalization = hyperparams['normalization']
+        self.num_classes = num_classes
 
         layers = []
         in_channels = input_channels
