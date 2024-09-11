@@ -63,82 +63,99 @@ def train(model, train_loader, test_loader, criterion, optimizer, device, epochs
     best_dev_f1 = best_dev_f1 # we will use this to save the model if its better than the best
     best_dev_loss = best_dev_loss # we will use this to save the model if its better than the best
     
-    model.train()
-    for epoch in tqdm(range(epochs),desc=f'Progress: '):
+    for epoch in tqdm(range(epochs), desc='Progress: '):
+        model.train()
         epoch_loss = 0
-        epoch_f1 = 0
+        all_train_preds = []
+        all_train_labels = []
+
+        # Training loop
         for X_batch, y_batch in train_loader:
             X_batch, y_batch = X_batch.to(device), y_batch.to(device)
-            
             optimizer.zero_grad()
-            logits = model.forward(X_batch)
-
+            logits = model(X_batch)
             loss = criterion(logits, y_batch)
-            f1 = multiclass_f1_score(logits, torch.argmax(y_batch, dim=1), num_classes=model.num_classes, average="micro").item()
-
             loss.backward()
             optimizer.step()
-
             epoch_loss += loss.item()
-            epoch_f1 += f1
+            all_train_preds.append(logits.detach())
+            all_train_labels.append(y_batch)
 
+        # calc training metrics for full dataset
+        all_train_preds = torch.cat(all_train_preds)
+        all_train_labels = torch.cat(all_train_labels)
+        train_f1 = multiclass_f1_score(all_train_preds, torch.argmax(all_train_labels, dim=1), 
+                                    num_classes=model.num_classes, average="macro").item()
 
         metrics['train_loss'].append(epoch_loss / len(train_loader))
-        metrics['train_f1'].append(epoch_f1 / len(train_loader))  # append avg f1 per epoch
+        metrics['train_f1'].append(train_f1)
 
+        # eval loop
+        model.eval()
+        test_epoch_loss = 0
+        all_test_preds = []
+        all_test_labels = []
 
         with torch.no_grad():
-            test_epoch_loss = 0
-            test_epoch_f1 = 0
             for X_batch, y_batch in test_loader:
                 X_batch, y_batch = X_batch.to(device), y_batch.to(device)
-
-                devlogits = model.forward(X_batch)
+                devlogits = model(X_batch)
                 dev_loss = criterion(devlogits, y_batch).item()
-                dev_f1 = multiclass_f1_score(devlogits, torch.argmax(y_batch, dim=1), num_classes=model.num_classes, average="micro").item() 
                 test_epoch_loss += dev_loss
-                test_epoch_f1 += dev_f1
+                all_test_preds.append(devlogits)
+                all_test_labels.append(y_batch)
 
-            metrics['dev_loss'].append(test_epoch_loss / len(test_loader))
-            metrics['dev_f1'].append(test_epoch_f1 / len(test_loader))
+        # calc test metrics for full dataset
+        all_test_preds = torch.cat(all_test_preds)
+        all_test_labels = torch.cat(all_test_labels)
+        test_f1 = multiclass_f1_score(all_test_preds, torch.argmax(all_test_labels, dim=1), 
+                                    num_classes=model.num_classes, average="macro").item()
 
+        metrics['dev_loss'].append(test_epoch_loss / len(test_loader))
+        metrics['dev_f1'].append(test_f1)
 
+        #check if the model has best F1 or Best Loss
+        is_loss_best = False
+        is_f1_best = False
+        if metrics['dev_loss'][-1] < best_dev_loss:
+            is_loss_best = True
+            best_dev_loss = metrics['dev_loss'][-1]
+            metrics['best_loss_dev'] = best_dev_loss #save to metrics for resuming and loading model
 
-            #check if the model has best F1 or Best Loss
-            is_loss_best = False
-            is_f1_best = False
-            if metrics['dev_loss'][-1] < best_dev_loss:
-                is_loss_best = True
-                best_dev_loss = metrics['dev_loss'][-1]
-                metrics['best_loss_dev'] = best_dev_loss #save to metrics for resuming and loading model
+        if metrics['dev_f1'][-1] > best_dev_f1:
+            is_f1_best = True
+            best_dev_f1 = metrics['dev_f1'][-1]
+            metrics['best_f1_dev'] = best_dev_f1
 
-            if metrics['dev_f1'][-1] > best_dev_f1:
-                is_f1_best = True
-                best_dev_f1 = metrics['dev_f1'][-1]
-                metrics['best_f1_dev'] = best_dev_f1
+        if is_f1_best or is_loss_best:
+            print('\n')
 
-            if is_loss_best: #if we found good loss then save
-                model_path = os.path.join(SAVE_DIR, f'{MODEL_NAME}_{TRAIN_ID}_bestLoss.pth')
-                metrics_path = os.path.join(SAVE_DIR, f'{MODEL_NAME}_{TRAIN_ID}_bestLoss_metrics.json')
+        if is_loss_best: #if we found good loss then save
+            model_path = os.path.join(SAVE_DIR, f'{MODEL_NAME}_{TRAIN_ID}_bestLoss.pth')
+            metrics_path = os.path.join(SAVE_DIR, f'{MODEL_NAME}_{TRAIN_ID}_bestLoss_metrics.json')
 
-                if os.path.exists(model_path): #remove the old best model if it exists
-                    os.remove(model_path)
-                    os.remove(metrics_path)
-                torch.save(model, model_path)
-                save_metrics(metrics, metrics_path)
-                print(f'New best Loss: {best_dev_loss} at Epoch:{epoch} Model saved!')
+            if os.path.exists(model_path): #remove the old best model if it exists
+                os.remove(model_path)
+                os.remove(metrics_path)
+            torch.save(model, model_path)
+            save_metrics(metrics, metrics_path)
+            print(f'New best Loss: {best_dev_loss} at Epoch:{epoch} Model saved!')
+        
+        
+        if is_f1_best: #if we found good f1 then save
+            model_path = os.path.join(SAVE_DIR, f'{MODEL_NAME}_{TRAIN_ID}_bestF1.pth')
+            metrics_path = os.path.join(SAVE_DIR, f'{MODEL_NAME}_{TRAIN_ID}_bestF1_metrics.json')
             
-            
-            if is_f1_best: #if we found good f1 then save
-                model_path = os.path.join(SAVE_DIR, f'{MODEL_NAME}_{TRAIN_ID}_bestF1.pth')
-                metrics_path = os.path.join(SAVE_DIR, f'{MODEL_NAME}_{TRAIN_ID}_bestF1_metrics.json')
-                
-                if os.path.exists(model_path):#remove the old best model if it exists
-                    os.remove(model_path)
-                    os.remove(metrics_path)
-                torch.save(model, model_path)
-                save_metrics(metrics, metrics_path)
-                print(f'New best F1: {best_dev_f1} at Epoch:{epoch} Model saved!')
+            if os.path.exists(model_path):#remove the old best model if it exists
+                os.remove(model_path)
+                os.remove(metrics_path)
+            torch.save(model, model_path)
+            save_metrics(metrics, metrics_path)
+            print(f'New best F1: {best_dev_f1} at Epoch:{epoch} Model saved!')
+
+        if is_f1_best or is_loss_best:
+            print('\n')
+
 
 
         if (epoch+1) % 2 == 0:

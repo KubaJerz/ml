@@ -59,7 +59,7 @@ def main():
 
     experimet_dir = os.path.join(os.getcwd(),f'{id}')
 
-    for i in tqdm(range(num_models)):
+    for i in range(num_models):
         #random pick
         hyperparams = {
             'id': f"{id}_{i}",
