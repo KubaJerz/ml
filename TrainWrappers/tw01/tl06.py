@@ -37,7 +37,7 @@ def train(model, train_loader, test_loader, criterion, optimizer, device, epochs
             logits = model.forward(X_batch)
 
             loss = criterion(logits, y_batch)
-            f1 = multiclass_f1_score(logits, torch.argmax(y_batch, dim=1), num_classes=model.num_classes,  average="macro").item()
+            f1 = multiclass_f1_score(logits, torch.argmax(y_batch, dim=1), num_classes=model.num_classes, average="macro").item()
 
             loss.backward()
             optimizer.step()
@@ -58,7 +58,7 @@ def train(model, train_loader, test_loader, criterion, optimizer, device, epochs
 
                 devlogits = model(X_batch)
                 dev_loss = criterion(devlogits, y_batch).item()
-                dev_f1 = multiclass_f1_score(devlogits, torch.argmax(y_batch, dim=1), num_classes=model.num_classes).item() 
+                dev_f1 = multiclass_f1_score(devlogits, torch.argmax(y_batch, dim=1), num_classes=model.num_classes, average="macro").item() 
                 test_epoch_loss += dev_loss
                 test_epoch_f1 += dev_f1
 
