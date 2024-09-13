@@ -1,6 +1,9 @@
 import argparse
 import os
 from tqdm import tqdm
+import warnings
+import logging
+
 
 import torch
 import torch.nn  as nn
@@ -11,13 +14,11 @@ from torcheval.metrics.functional import multiclass_f1_score
 from tensor_builder import getDataSet
 from util_tl import save_metrics, plot_combined_metrics, check_and_save_best_model, train_prep
 
-
 '''
 IMPORTANT NOTES about this training script
 -we expect the forward pass to return logits
 -we pass logits into the criterion
 '''
-
 
 def train(model, train_loader, test_loader, criterion, optimizer, device, epochs, metrics, best_dev_f1, best_dev_loss, save_dir, train_id):
     model = model.to(device)
@@ -37,6 +38,7 @@ def train(model, train_loader, test_loader, criterion, optimizer, device, epochs
             logits = model.forward(X_batch)
 
             loss = criterion(logits, y_batch)
+
             f1 = multiclass_f1_score(logits, torch.argmax(y_batch, dim=1), num_classes=model.num_classes,  average="macro").item()
 
             loss.backward()
@@ -58,7 +60,9 @@ def train(model, train_loader, test_loader, criterion, optimizer, device, epochs
 
                 devlogits = model(X_batch)
                 dev_loss = criterion(devlogits, y_batch).item()
-                dev_f1 = multiclass_f1_score(devlogits, torch.argmax(y_batch, dim=1), num_classes=model.num_classes).item() 
+                
+                dev_f1 = multiclass_f1_score(devlogits, torch.argmax(y_batch, dim=1), num_classes=model.num_classes,  average="macro").item() 
+                
                 test_epoch_loss += dev_loss
                 test_epoch_f1 += dev_f1
 
@@ -131,6 +135,8 @@ def run_training(
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters())
 
+    warnings.filterwarnings("ignore", category=UserWarning, module="torchmetrics")
+    logging.getLogger().setLevel(logging.ERROR)  # This will suppress WARNING level logs
     metrics = train(model=model, train_loader=train_loader, test_loader=test_loader, criterion=criterion, optimizer=optimizer, device=device, epochs=epochs, metrics=metrics, best_dev_f1=metrics['best_f1_dev'], best_dev_loss=metrics['best_loss_dev'], save_dir=save_dir, train_id=train_id)
 
     model_path = os.path.join(save_dir, f'{train_id}_Full.pth')
