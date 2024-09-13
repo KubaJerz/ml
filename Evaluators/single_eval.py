@@ -32,16 +32,13 @@ def extract_metrics(sudir):
         return {}
 
 
-def add_to_plot(plot, data):
-    #add stuff
+def single_plot(data):
+    #make a plot and add stuff
     return plot
 
 def main(eval_dir_path):
-    plot = plt.plot() #base plot
-
-    for subdir in [d for d in os.listdir(eval_dir_path) if os.path.isdir(os.path.join(eval_dir_path, d))]:
-        metrics = extract_metrics(subdir)
-        plot = add_to_plot(plot=plot, data=metrics)
+    metrics = extract_metrics(subdir)
+    plot = single_plot(data=metrics)
 
 
     plt.tight_layout()
@@ -50,8 +47,8 @@ def main(eval_dir_path):
 
 
 def arg_pars():
-    parser = argparse.ArgumentParser(description="mutli model evaluator")
-    parser.add_argument("eval_dir_path", type=str, help="Path to the dir with all model sub dir")
+    parser = argparse.ArgumentParser(description="single model evaluator")
+    parser.add_argument("eval_dir_path", type=str, help="Path to the dir with model")
 
     args = parser.parse_args()
 
