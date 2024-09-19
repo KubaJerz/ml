@@ -3,6 +3,8 @@ import os
 from tqdm import tqdm
 import warnings
 import logging
+from sklearn.metrics import confusion_matrix
+
 
 
 import torch
@@ -54,13 +56,23 @@ def train(model, train_loader, test_loader, criterion, optimizer, device, epochs
         test_epoch_loss = 0
         test_epoch_f1 = 0
 
+        metrics['confusion_matrix'] = []
+
         with torch.no_grad():
             for X_batch, y_batch in test_loader:
                 X_batch, y_batch = X_batch.to(device), y_batch.to(device)
 
                 devlogits = model(X_batch)
+                #for loss
                 dev_loss = criterion(devlogits, y_batch).item()
+
+                #for confusion matrix
+                predicted_labels = torch.argmax(devlogits, dim=1).cpu().numpy()
+                true_labels = torch.argmax(y_batch, dim=1).cpu().numpy()
+                conf_matrix = confusion_matrix(true_labels, predicted_labels, labels=range(model.num_classes))
+                metrics['confusion_matrix'].append(conf_matrix)
                 
+                #for f1 score
                 dev_f1 = multiclass_f1_score(devlogits, torch.argmax(y_batch, dim=1), num_classes=model.num_classes,  average="macro").item() 
                 
                 test_epoch_loss += dev_loss

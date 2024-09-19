@@ -152,7 +152,7 @@ def new_training(model_path, training_id):
     model_name = (file_name.split('.')[0]).upper()
     metrics = {
         'train_loss': [], 'dev_loss': [], 'train_f1': [], 'dev_f1': [],
-        'best_f1_dev': 0, 'best_loss_dev': float('inf')
+        'best_f1_dev': 0, 'best_loss_dev': float('inf'), 'confusion_matrix': []
     }
     sys.path.append(dir_path)
     module = importlib.import_module(module_name)
@@ -168,7 +168,7 @@ def new_training(model_path, training_id):
 def model_instance_training(model_instance, sub_dir):
     metrics = {
         'train_loss': [], 'dev_loss': [], 'train_f1': [], 'dev_f1': [],
-        'best_f1_dev': 0, 'best_loss_dev': float('inf')
+        'best_f1_dev': 0, 'best_loss_dev': float('inf'), 'confusion_matrix': []
     }
     model = model_instance
     save_dir = sub_dir
