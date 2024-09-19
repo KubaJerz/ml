@@ -6,6 +6,7 @@ import importlib
 import matplotlib.pyplot as plt
 import glob
 import json
+import numpy as np
 
 
 
@@ -40,6 +41,7 @@ def plot_combined_metrics(lossi, devlossi, f1i, devf1i, best_f1_dev, best_loss_d
 
 
 def save_metrics(metrics, filename):
+    metrics['confusion_matrix'] = metrics['confusion_matrix'].tolist() if isinstance(metrics['confusion_matrix'],np.ndarray) else metrics['confusion_matrix']
     with open(filename, 'w') as f:
         json.dump(metrics, f)
 
@@ -152,7 +154,7 @@ def new_training(model_path, training_id):
     model_name = (file_name.split('.')[0]).upper()
     metrics = {
         'train_loss': [], 'dev_loss': [], 'train_f1': [], 'dev_f1': [],
-        'best_f1_dev': 0, 'best_loss_dev': float('inf'), 'confusion_matrix': []
+        'best_f1_dev': 0, 'best_loss_dev': float('inf'), 'confusion_matrix': None
     }
     sys.path.append(dir_path)
     module = importlib.import_module(module_name)
@@ -168,7 +170,7 @@ def new_training(model_path, training_id):
 def model_instance_training(model_instance, sub_dir):
     metrics = {
         'train_loss': [], 'dev_loss': [], 'train_f1': [], 'dev_f1': [],
-        'best_f1_dev': 0, 'best_loss_dev': float('inf'), 'confusion_matrix': []
+        'best_f1_dev': 0, 'best_loss_dev': float('inf'), 'confusion_matrix': None
     }
     model = model_instance
     save_dir = sub_dir
