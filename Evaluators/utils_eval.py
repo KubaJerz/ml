@@ -1,3 +1,6 @@
+import os
+import glob
+import json
 
 def color_helper(num_colors):
     colors =  [
@@ -11,3 +14,29 @@ def color_helper(num_colors):
         "#E00000", "#00E000", "#0000E0", "#E0E000", "#E000E0", "#00E0E0", "#E0E0E0", ]
     
     return colors[:num_colors]
+
+def extract_metrics(basedir,subdir):
+    metrics_data = []
+    # Search for files matching the pattern *_FULL_metrics.json 
+    file_pattern = os.path.join(basedir, subdir, '*_Full_metrics.json')
+    files = glob.glob(file_pattern)
+
+    if not files:
+        print(f"No previous metrics files found in {subdir}")
+        return {}
+    
+    file_path = files[0]
+
+    try:
+        with open(file_path, 'r') as file:
+            metrics = json.load(file)
+        return metrics
+    except FileNotFoundError:
+        print(f"Error: File not found at {file_path}")
+        return {}
+    except json.JSONDecodeError:
+        print(f"Error: Invalid JSON in file {file_path}")
+        return {}
+    except Exception as e:
+        print(f"An unexpected error occurred: {str(e)}")
+        return {}
