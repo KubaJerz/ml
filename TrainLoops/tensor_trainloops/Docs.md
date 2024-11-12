@@ -6,7 +6,7 @@
 This script provides a basic framework for training neural network models using PyTorch with a custom dataset loader. We now use `getDataSet()` from <ins> custom module that must be imported and customized before running the script </ins> 
 
 ### Usage
-```python3 tl05.py <training_id>  <model_path> --train_batch_size [optional args: [--resume] [-full|-f1|-loss] ...] ```
+```python3 tl06.py <training_id>  <model_path> --train_batch_size [optional args: [--resume] [-full|-f1|-loss] ...] ```
 
 or 
 
