@@ -61,6 +61,7 @@ def main():
 
     for i in range(num_models):
         #random pick
+        random.seed()
         hyperparams = {
             'id': f"{id}_{i}",
             'train_batch_size': random.choice(hyper_ranges['train_batch_size']),
