@@ -24,8 +24,8 @@ IMPORTANT NOTES about this training script
 
 def train(model, train_loader, test_loader, criterion, optimizer, device, epochs, metrics, best_dev_f1, best_dev_loss, save_dir, train_id):
     model = model.to(device)
-    best_dev_f1 = best_dev_f1 # we will use this to save the model if its better than the best
-    best_dev_loss = best_dev_loss # we will use this to save the model if its better than the best
+    best_dev_f1 = best_dev_f1
+    best_dev_loss = best_dev_loss
     
     for epoch in tqdm(range(epochs), desc='Progress: '):
         model.train()
@@ -35,67 +35,42 @@ def train(model, train_loader, test_loader, criterion, optimizer, device, epochs
         # Training loop
         for X_batch, y_batch in train_loader:
             X_batch, y_batch = X_batch.to(device), y_batch.to(device)
-            
             optimizer.zero_grad()
             logits = model.forward(X_batch)
-
             loss = criterion(logits, y_batch)
-
-            f1 = multiclass_f1_score(logits, torch.argmax(y_batch, dim=1), num_classes=model.num_classes,  average="macro").item()
-
+            f1 = multiclass_f1_score(logits, torch.argmax(y_batch, dim=1), num_classes=model.num_classes, average="macro").item()
             loss.backward()
             optimizer.step()
-
             epoch_loss += loss.item()
             epoch_f1 += f1
 
         metrics['train_loss'].append(epoch_loss / len(train_loader))
-        metrics['train_f1'].append(epoch_f1 / len(train_loader))  # append avg f1 per epoch
+        metrics['train_f1'].append(epoch_f1 / len(train_loader))
 
         # eval loop
         test_epoch_loss = 0
         test_epoch_f1 = 0
 
-        total_conf_matrix = None
-
         with torch.no_grad():
             for X_batch, y_batch in test_loader:
                 X_batch, y_batch = X_batch.to(device), y_batch.to(device)
-
                 devlogits = model(X_batch)
-                #for loss
                 dev_loss = criterion(devlogits, y_batch).item()
-
-                #for confusion matrix
-                predicted_labels = torch.argmax(devlogits, dim=1).cpu().numpy()
-                true_labels = torch.argmax(y_batch, dim=1).cpu().numpy()
-                batch_conf_matrix = confusion_matrix(true_labels, predicted_labels, labels=range(model.num_classes))
-                if total_conf_matrix is None:
-                    total_conf_matrix = batch_conf_matrix
-                else:
-                    total_conf_matrix += batch_conf_matrix
-        
-                
-                #for f1 score
-                dev_f1 = multiclass_f1_score(devlogits, torch.argmax(y_batch, dim=1), num_classes=model.num_classes,  average="macro").item() 
-                
+                dev_f1 = multiclass_f1_score(devlogits, torch.argmax(y_batch, dim=1), num_classes=model.num_classes, average="macro").item()
                 test_epoch_loss += dev_loss
                 test_epoch_f1 += dev_f1
-
-        metrics['confusion_matrix'] = total_conf_matrix
 
         metrics['dev_loss'].append(test_epoch_loss / len(test_loader))
         metrics['dev_f1'].append(test_epoch_f1 / len(test_loader))
 
-        #we check if the metrics so LOSS or F1 are the best yet and then save the model
         best_dev_loss, best_dev_f1 = check_and_save_best_model(
-            metrics=metrics, model=model, epoch=epoch, save_dir=save_dir, 
+            metrics=metrics, model=model, epoch=epoch, save_dir=save_dir,
             train_id=train_id, best_dev_loss=best_dev_loss, best_dev_f1=best_dev_f1)
 
         if (epoch+1) % 2 == 0:
-            plot_combined_metrics(metrics['train_loss'], metrics['dev_loss'], 
-                                  metrics['train_f1'], metrics['dev_f1'], metrics['best_f1_dev'], 
-                                  metrics['best_loss_dev'], train_id, save_dir)
+            plot_combined_metrics(metrics['train_loss'], metrics['dev_loss'],
+                                metrics['train_f1'], metrics['dev_f1'], metrics['best_f1_dev'],
+                                metrics['best_loss_dev'], train_id, save_dir)
             
     return metrics
  
