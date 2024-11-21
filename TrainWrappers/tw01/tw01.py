@@ -24,7 +24,10 @@ def train_model(hyperparams, model, sub_dir, epochs):
     run_training(training_id=hyperparams['id'],
                  model_path=model,
                  sub_dir=sub_dir,
-                 epochs=epochs)
+                 epochs=epochs,
+                 lr=hyperparams['learning_rate'],
+                 train_batch_size=hyperparams['train_batch_size'],
+                 test_batch_size=hyperparams['test_batch_size'])
     
 
 

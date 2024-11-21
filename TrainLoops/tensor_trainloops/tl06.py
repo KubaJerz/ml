@@ -87,6 +87,7 @@ def run_training(
     full=False,
     f1=False,
     loss=False,
+    lr=0.001
 ):
 
     # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -125,7 +126,7 @@ def run_training(
     test_loader = DataLoader(test_dataset, batch_size=test_batch_size, shuffle=False)
 
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters())
+    optimizer = optim.Adam(model.parameters(),lr=lr)
 
     warnings.filterwarnings("ignore", category=UserWarning, module="torchmetrics")
     logging.getLogger().setLevel(logging.ERROR)  # This will suppress WARNING level logs
