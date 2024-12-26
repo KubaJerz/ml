@@ -5,8 +5,6 @@ from .modes.ResumeF1 import ResumeF1
 from .modes.ResumeLoss import ResumeLoss
 from .modes.ResumeFull import ResumeFull
 
-
-
 class ExperimentModeError(Exception):
     def __init__(self, message):
         super().__init__(message)
