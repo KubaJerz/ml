@@ -5,12 +5,19 @@ from ..utils import check_field, check_section_exists
 class SingleMode(ExperimentMode):
     def __init__(self, config):
         self.config = config
+        self.dir = None
+    
+    def execute(self):
+        self.setup_model()
+        self.setup_data()
+        self.setup_training()
+        self.train()
 
     def validate_mode_specific_config_structure(self):
+        
         if self.config.get('experiment', {}).get('mode') != 'single':
             raise ValueError("Mode must be 'single' to use SingleMode")
-
-        
+ 
         check_section_exists(self.config, 'data')
         check_section_exists(self.config, 'training')
         
@@ -30,10 +37,5 @@ class SingleMode(ExperimentMode):
             
 
     def setup_experimant_dir(self):
-        pass
-    
-    def execute(self):
-        self.setup_model()
-        self.setup_data()
-        self.setup_training()
-        self.train()
+        super().setup_experimant_dir()
+
