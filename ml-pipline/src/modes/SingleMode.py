@@ -6,12 +6,13 @@ class SingleMode(ExperimentMode):
     def __init__(self, config):
         self.config = config
         self.dir = None
+        self.training_loop = None
     
     def execute(self):
-        self.setup_model()
-        self.setup_data()
-        self.setup_training()
-        self.train()
+        self._setup_model() #when we implinet this go back to validate_mode_specific_config_structure and fic this
+        self._setup_data()
+        self._setup_training()
+        self._train()
 
     def validate_mode_specific_config_structure(self):
         
@@ -38,4 +39,18 @@ class SingleMode(ExperimentMode):
 
     def setup_experimant_dir(self):
         super().setup_experimant_dir()
+
+    def _setup_model(self):
+        pass
+
+    def _setup_data(self):
+        pass
+
+    def _setup_training(self):
+        pass
+
+    def _train(self):
+        pass
+
+
 
