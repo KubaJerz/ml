@@ -1,8 +1,10 @@
 from .ExperimentMode import ExperimentMode
 from typing import Dict, Any
-from utils import check_field, check_section_exists
 import os, sys
 import importlib
+from utils.validation_utils import validate_mode_config, validate_data_config, validate_training_config, check_section_exists
+
+
 
 
 class SingleMode(ExperimentMode):
@@ -20,45 +22,13 @@ class SingleMode(ExperimentMode):
         self.training_loop.fit()
 
     def validate_mode_specific_config_structure(self):
-        if self.config.get('experiment', {}).get('mode') != 'single':
-            raise ValueError("Mode must be 'single' to use SingleMode")
-
-        check_section_exists(self.config, 'data')
-        check_section_exists(self.config, 'training')
-        check_section_exists(self.config, 'model')
+        validate_mode_config(self.config, "single")
+    
+        for section in ['data', 'training', 'model']:
+            check_section_exists(self.config, section)
         
-        data = self.config['data']
-        check_field(data, 'num_classes', int)
-        check_field(data, 'input_size', int)
-        check_field(data, 'input_channels', int)
-        check_field(data, 'output_size', int)
-        check_field(data, 'absolute_path', str)
-        check_field(data, 'script_name', str)
-        check_field(data, 'split_type', str)
-        check_field(data, 'split_ratios', float, is_sequence=True)
-        check_field(data, 'shuffle', bool)
-        check_field(data, 'seed', int)
-        
-        split_type = data['split_type']
-        split_ratios = data['split_ratios']
-        
-        if split_type == "train,test":
-            if len(split_ratios) != 2:
-                raise ValueError("train,test split type requires exactly 2 split values")
-        elif split_type == "train,test,val":
-            if len(split_ratios) != 3:
-                raise ValueError("train,test,val split type requires exactly 3 split values")
-        else:
-            raise ValueError("split_type must be either 'train,test' or 'train,test,val'")
-        
-        if not abs(sum(split_ratios) - 1.0) < 1e-6:
-            raise ValueError(f"Split ratios must sum to 1.0, got {sum(split_ratios)}")
-        
-        training = self.config['training']
-        check_field(training, 'epochs', int)
-        check_field(training, 'train_batch_size', int)
-        check_field(training, 'test_batch_size', int)
-        check_field(training, 'learning_rate', float)
+        validate_data_config(self.config['data'])
+        validate_training_config(self.config['training'])
         
         return True      
             
