@@ -1,6 +1,9 @@
 from abc import ABC, abstractmethod
 import torch.nn as nn
+from typing import Dict
+
 from ..utils.logging_utils import save_metrics, save_model
+
 
 """Abstract base class for training loop strategies."""
 class TrainLoopStrategy(ABC):
@@ -19,12 +22,12 @@ class TrainLoopStrategy(ABC):
         pass
         
     def save_checkpoint(self, metrics):
-        save_model(self.model, metrics, f'checkpoint_epoch_{self.current_epoch}', self.save_full_model)
+        save_model(model=self.model, metrics=metrics, name=f'checkpoint_epoch_{self.current_epoch}', save_full_model=self.save_full_model)
         
-    def _call_callbacks(self, hook_name: str, *args, **kwargs) -> bool:
+    def _call_callbacks(self, function_name: str, *args, **kwargs) -> bool:
         continue_training = True
         for callback in self.callbacks:
-            hook = getattr(callback, hook_name)
+            hook = getattr(callback, function_name)
             result = hook(self, *args, **kwargs)
             if result is False:
                 continue_training = False
