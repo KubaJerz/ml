@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
 from ..TrainLoopStrategy import TrainLoopStrategy
 
+
+''' When you impliment a callback you just write code for the part of the training you need (like on_epoch_start()) then the rest of the funtions you just'''
 class Callback(ABC):
-    """Base callback interface defining the training hooks."""
     @abstractmethod
     def on_training_start(self, training_loop: 'TrainLoopStrategy', model, datamodule) -> None:
         pass
