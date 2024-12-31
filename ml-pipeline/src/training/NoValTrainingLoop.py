@@ -1,9 +1,18 @@
 from TrainLoopStrategy import TrainLoopStrategy
+from typing import Dict, Any
+from torcheval.metrics.functional import multiclass_f1_score
+
+
 
 class NoValTrainingLoop(TrainLoopStrategy):
     """Training loop without validation."""
-    def fit(self, train_data, val_data=None) -> Dict[str, float]:
-        self._call_callbacks('on_training_start', self.model, train_data)
+    def fit(self, data, metrics=None) -> Dict[str, float]:
+        #DEFINE METHRICS HERE PROB UNLESS THE CONFLICTS WITH RESUME
+        if metrics == None:
+            #define the metrics dict
+            pass
+
+        self._call_callbacks('on_training_start', self.model, metrics)
         
         metrics_history = []
         for epoch in range(self.current_epoch, self.current_epoch + self.max_epochs):
