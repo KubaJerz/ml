@@ -1,8 +1,8 @@
 import yaml
 from pathlib import Path
 from typing import Dict, Any
-from ExperimentModeFactory import ExperimentModeFactory
-from utils.validation_utils import validate_core_config_structure
+from .ExperimentModeFactory import ExperimentModeFactory
+from .utils.validation_utils import validate_core_config_structure
 
 class ExperimentRunner:
     def __init__(self, config_path: str):

@@ -2,7 +2,7 @@ from .ExperimentMode import ExperimentMode
 from typing import Dict, Any
 import os, sys
 import importlib
-from utils.validation_utils import validate_mode_config, validate_data_config, validate_training_config, check_section_exists
+from ..utils.validation_utils import validate_mode_config, validate_data_config, validate_training_config, check_section_exists
 import torch
 from ..training.TrainingLoop import TrainingLoop
 from ..training.callbacks import BestF1Callback, BestLossCallback, EarlyStoppingCallback, PlotCombinedMetrics

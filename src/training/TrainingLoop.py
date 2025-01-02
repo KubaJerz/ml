@@ -1,4 +1,4 @@
-from TrainLoopStrategy import TrainLoopStrategy
+from .TrainLoopStrategy import TrainLoopStrategy
 from typing import Dict, Any
 from torcheval.metrics.functional import multiclass_f1_score
 from tqdm import tqdm

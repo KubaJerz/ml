@@ -1,5 +1,5 @@
-from Callback import Callback
-from ....src.utils.logging_utils import save_metrics, save_model
+from .Callback import Callback
+from src.utils.logging_utils import save_metrics, save_model
 import matplotlib.pyplot as plt
 import os
 
