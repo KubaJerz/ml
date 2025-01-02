@@ -9,7 +9,7 @@ class BestLossCallback(Callback):
        self.best_loss = float('inf')
        self.metric_to_monitor = metric_to_monitor
        
-   def on_training_start(self, training_loop=None, datamodule=None) -> bool:
+   def on_training_start(self, training_loop=None) -> bool:
        return True
        
    def on_epoch_start(self, training_loop=None) -> bool:

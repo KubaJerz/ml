@@ -89,7 +89,19 @@ class SingleMode(ExperimentMode):
             raise RuntimeError(f"Error loading data: {e}")
 
     def _setup_training(self):
+        
         pass
+
+    def _set_metrics(self, metrics):
+        if metrics == None:
+            self.metrics = {
+                'train_loss': [], 'dev_loss': [], 
+                'train_f1': [], 'dev_f1': [],
+                'best_f1_dev': 0, 'best_loss_dev': float('inf'), 
+                'confusion_matrix': None
+                }
+        elif validate_metrics_structure(metrics):
+            self.metrics = metrics
 
 
 

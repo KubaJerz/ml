@@ -8,7 +8,7 @@ class BestF1Callback(Callback):
    def __init__(self, metric_to_monitor='dev_f1'):
        self.metric_to_monitor = metric_to_monitor
 
-   def on_training_start(self, training_loop=None, datamodule=None) -> bool:
+   def on_training_start(self, training_loop=None) -> bool:
        return True
        
    def on_epoch_start(self, training_loop=None) -> bool:

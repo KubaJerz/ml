@@ -13,7 +13,7 @@ All callback methods return a boolean:
 """
 class Callback(ABC):
     @abstractmethod
-    def on_training_start(self, training_loop=None, datamodule=None) -> bool:
+    def on_training_start(self, training_loop=None) -> bool:
         pass
     
     @abstractmethod

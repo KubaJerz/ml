@@ -1,12 +1,15 @@
 import torch
 from ..utils.validation_utils import validate_data_config
+from abc import ABC, abstractmethod
 
-class BaseDataScript:
+
+class BaseDataScript(ABC):
     def __init__(self, config: dict):
         self._validate_config(config)
         self.config = config
 
-    def get_data(self):
+    @abstractmethod
+    def get_datasets(self):
         """
         Get datasets based on configuration.
         
@@ -16,7 +19,19 @@ class BaseDataScript:
             If split_type is "train,test,val":
                 tuple: (train_dataset, test_dataset, val_dataset)
         """
-        raise NotImplementedError("Subclasses must implement get_data()")
+    
+    @abstractmethod
+    def get_data_loaders(self):
+        """
+        Get loaders based on configuration.
+        
+        Returns:
+            If split_type is "train,test":
+                tuple: (train_dataset, test_dataset)
+            If split_type is "train,test,val":
+                tuple: (train_dataset, test_dataset, val_dataset)
+        """
+
 
     def _validate_config(self, config):
         validate_data_config(config)

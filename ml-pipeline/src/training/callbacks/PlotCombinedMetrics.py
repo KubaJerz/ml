@@ -1,18 +1,18 @@
 from Callback import Callback
 from ....src.utils.logging_utils import save_metrics, save_model
+import matplotlib.pyplot as plt
+import os
 
 
-class BestLossCallback(Callback):
-   """Saves model when loss improves."""
 
-   def __init__(self, metric_to_monitor='dev_loss'):
-       self.best_loss = float('inf')
-       self.metric_to_monitor = metric_to_monitor
-       
-   def on_training_start(self, training_loop=None, datamodule=None) -> bool:
+class PlotCombinedMetrics(Callback):
+   def __init__(self):
+       pass
+
+   def on_training_start(self, training_loop=None) -> bool:
        return True
        
-   def on_epoch_start(self, training_loop=None, metrics=None) -> bool:
+   def on_epoch_start(self, training_loop=None) -> bool:
        return True
        
    def on_batch_start(self, training_loop=None, batch=None) -> bool:
@@ -21,13 +21,35 @@ class BestLossCallback(Callback):
    def on_batch_end(self, training_loop=None, batch_metrics=None) -> bool:
        return True
        
-   def on_epoch_end(self, training_loop=None, metrics=None) -> bool:
-        lossi, devlossi, f1i, devf1i, best_f1_dev, best_loss_dev, train_id, save_dir):
+   def on_epoch_end(self, training_loop=None) -> bool:
+        metrics = training_loop.metrics
+        save_dir = training_loop.save_dir
+
+        if _is_even(training_loop.current_epoch) and _is_even(training_loop.total_epochs):
+            _plot(metrics=metrics, save_dir=save_dir)
+            return True
+        elif not _is_even(training_loop.current_epoch) and not _is_even(training_loop.total_epochs):
+            _plot(metrics=metrics, save_dir=save_dir)
+            return True
+        else:
+            return True
+       
+   def on_training_end(self, training_loop=None) -> bool:
+       return True
+   
+def _is_even(num):
+    return (num % 2) == 0   
+
+def _plot(metrics, save_dir):
+        lossi, devlossi = metrics.get('train_loss'), metrics.get('dev_loss') 
+        f1i, devf1i = metrics.get('train_f1'), metrics.get('dev_f1')
+        best_f1_dev, best_loss_dev = metrics.get('best_f1_dev'), metrics.get('best_loss_dev')
+
         plt.figure(figsize=(12, 6))
         
         plt.subplot(1, 2, 1)
         plt.plot(lossi, label='Train Loss')
-        plt.plot(devlossi, label='Validation Loss')
+        plt.plot(devlossi, label='Dev Loss')
         plt.title('Loss vs Epochs')
         plt.xlabel('Epochs')
         plt.ylabel('Loss')
@@ -38,7 +60,7 @@ class BestLossCallback(Callback):
         # Plot F1 scores
         plt.subplot(1, 2, 2)
         plt.plot(f1i, label='Train F1')
-        plt.plot(devf1i, label='Validation F1')
+        plt.plot(devf1i, label='Dev F1')
         plt.title('F1 Score vs Epochs')
         plt.xlabel('Epochs')
         plt.ylabel('F1 Score')
@@ -48,11 +70,7 @@ class BestLossCallback(Callback):
 
         
         plt.tight_layout()
-        plt.savefig(os.path.join(save_dir,f"{train_id}_metrics.png"))
+        plt.savefig(os.path.join(save_dir,f"metrics.png"))
         plt.close()
-       
-   def on_training_end(self, training_loop=None, metrics=None) -> bool:
-       return True
-   
 
 

@@ -5,7 +5,7 @@ def check_section_exists(config, section_name):
         raise ValueError(f"Missing {section_name} section")
     return True
 
-def check_field(config, field_name, field_type,is_sequence = False):
+def check_field(config, field_name, field_type, is_sequence = False):
     if field_name not in config:
         raise ValueError(f"Missing {field_name}")
         
@@ -94,4 +94,19 @@ def validate_training_config(training_config):
 def validate_mode_config(config, expected_mode):
     if config.get('experiment', {}).get('mode') != expected_mode:
         raise ValueError(f"Mode must be '{expected_mode}'")
+    return True
+
+def validate_metrics_structure(metrics):
+    required_fields = {
+        'train_loss': list,
+        'dev_loss': list,
+        'train_f1': list,
+        'dev_f1': list,
+        'best_f1_dev': float,
+        'best_loss_dev': float,
+    }
+    
+    for field_name, field_type in required_fields.items():
+        check_field(metrics, field_name, field_type)
+    
     return True

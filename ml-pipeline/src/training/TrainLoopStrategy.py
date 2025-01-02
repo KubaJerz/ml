@@ -1,29 +1,27 @@
 from abc import ABC, abstractmethod
 import torch.nn as nn
 from typing import Dict
-
-from ..utils.logging_utils import save_metrics, save_model
-
+from ..utils.validation_utils import validate_metrics_structure
 
 """Abstract base class for training loop strategies."""
 class TrainLoopStrategy(ABC):
-    def __init__(self, model, optimizer, criterion, logger, callbacks, device, save_full_model=True):
+    def __init__(self, model, optimizer, criterion, total_epochs, callbacks, device, save_dir, save_full_model=True):
         self.model = model
         self.optimizer = optimizer
         self.criterion = criterion
         self.callbacks = callbacks
         self.device = device
+        self.save_dir = save_dir
+        self.total_epochs = total_epochs
         self.current_epoch = 0
         self.save_full_model = save_full_model
+
         
     @abstractmethod
-    def fit(self, train_data, val_data) -> Dict[str, float]:
+    def fit(self, dataloaders) -> Dict[str, float]:
         """Main training loop"""
         pass
-        
-    def save_checkpoint(self, metrics):
-        save_model(model=self.model, metrics=metrics, name=f'checkpoint_epoch_{self.current_epoch}', save_full_model=self.save_full_model)
-        
+
     def _call_callbacks(self, function_name: str, *args, **kwargs) -> bool:
         continue_training = True
         for callback in self.callbacks:
@@ -32,3 +30,4 @@ class TrainLoopStrategy(ABC):
             if result is False:
                 continue_training = False
         return continue_training
+    
