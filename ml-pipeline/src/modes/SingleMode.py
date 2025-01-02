@@ -3,7 +3,9 @@ from typing import Dict, Any
 import os, sys
 import importlib
 from utils.validation_utils import validate_mode_config, validate_data_config, validate_training_config, check_section_exists
-
+import torch
+from ..training.TrainingLoop import TrainingLoop
+from ..training.callbacks import BestF1Callback, BestLossCallback, EarlyStoppingCallback, PlotCombinedMetrics
 
 
 
@@ -12,14 +14,12 @@ class SingleMode(ExperimentMode):
         self.config = config
         self.dir = None
 
-        self.model = None
-        self.training_loop = None
     
     def execute(self):
-        self._setup_model() 
-        self._setup_data() #when we implinet this go back to validate_mode_specific_config_structure and fic this
-        self._setup_training()
-        self.training_loop.fit()
+        model = self._setup_model() 
+        dataloaders = self._setup_data() #when we implinet this go back to validate_mode_specific_config_structure and fic this
+        training_loop = self._setup_training(model=model, dataloaders=dataloaders)
+        training_loop.fit()
 
     def validate_mode_specific_config_structure(self):
         validate_mode_config(self.config, "single")
@@ -75,11 +75,8 @@ class SingleMode(ExperimentMode):
             data_module = importlib.import_module(module_name)
             data_script_class = getattr(data_module, module_name)
             
-            self.data_script = data_script_class(self.config['data'])
-            self.datasets = self.data_script.get_data()
-            
-            if not self.datasets or any(dataset is None for dataset in self.datasets):
-                raise RuntimeError("Data script returned None or empty datasets")
+            data_script = data_script_class(self.config['data'])
+            return data_script.get_data_loaders()
             
         except ImportError as e:
             raise RuntimeError(f"Failed to import data script {script_name}: {e}")
@@ -88,20 +85,86 @@ class SingleMode(ExperimentMode):
         except Exception as e:
             raise RuntimeError(f"Error loading data: {e}")
 
-    def _setup_training(self):
-        
-        pass
+    def _setup_training(self, model, dataloaders):
+        try:
+            training_config = self.config['training']
+            
+            optimizer = self._create_optimizer(model, training_config)
+            criterion = self._create_criterion(training_config)
+            callbacks = self._setup_callbacks(training_config)
+            
+            total_epochs = training_config.get('epochs', 100)
+            device = training_config.get('device', 'cuda' if torch.cuda.is_available() else 'cpu')
+            save_dir = self.dir
+            save_full_model = training_config.get('save_full_model', True)
 
-    def _set_metrics(self, metrics):
-        if metrics == None:
-            self.metrics = {
-                'train_loss': [], 'dev_loss': [], 
-                'train_f1': [], 'dev_f1': [],
-                'best_f1_dev': 0, 'best_loss_dev': float('inf'), 
-                'confusion_matrix': None
-                }
-        elif validate_metrics_structure(metrics):
-            self.metrics = metrics
+            if len(dataloaders) == 3:
+                train_loader, dev_loader, test_loader = dataloaders
+                return TrainingLoop(
+                    model=model,
+                    optimizer=optimizer,
+                    criterion=criterion,
+                    total_epochs=total_epochs,
+                    callbacks=callbacks,
+                    device=device,
+                    save_dir=save_dir,
+                    train_loader=train_loader,
+                    dev_loader=dev_loader,
+                    test_loader=test_loader,
+                    save_full_model=save_full_model
+                )
+            elif len(dataloaders) == 2:
+                train_loader, dev_loader = dataloaders
+                return TrainingLoop(
+                    model=model,
+                    optimizer=optimizer,
+                    criterion=criterion,
+                    total_epochs=total_epochs,
+                    callbacks=callbacks,
+                    device=device,
+                    save_dir=save_dir,
+                    train_loader=train_loader,
+                    dev_loader=dev_loader,
+                    save_full_model=save_full_model
+                )
+            else:
+                raise RuntimeError(f"Unsupported number of dataloaders: {len(dataloaders)}. Must be 2 or 3.")
+                
+        except Exception as e:
+            raise RuntimeError(f"Failed to setup training loop: {str(e)}")
+
+    def _create_optimizer(self, model, training_config):
+        optimizer_name = training_config.get('optimizer', 'Adam')
+        learning_rate = training_config.get('learning_rate', 0.001)
+        
+        optimizer_class = getattr(torch.optim, optimizer_name)
+        return optimizer_class(model.parameters(), lr=learning_rate)
+
+    def _create_criterion(self, training_config):
+        criterion_name = training_config.get('criterion', 'CrossEntropyLoss')
+        criterion_class = getattr(torch.nn, criterion_name)
+        return criterion_class()
+
+    def _setup_callbacks(self, training_config):
+        callbacks = []
+        
+        if training_config.get('early_stopping', False):
+            callbacks.append(EarlyStoppingCallback(
+                patience=training_config.get('early_stopping_patience', 10),
+                monitor=training_config.get('early_stopping_monitor', 'dev_loss')
+            ))
+        
+        if training_config.get('best_f1', True):
+            callbacks.append(BestF1Callback())
+
+        if training_config.get('best_loss', True):
+            callbacks.append(BestLossCallback())
+
+        if training_config.get('plot_combined_metric', True):
+            callbacks.append(PlotCombinedMetrics())
+            
+        return callbacks
+
 
 
 

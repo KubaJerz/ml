@@ -5,14 +5,14 @@ from typing import Dict
 
 def save_metrics(metrics, name, save_dir):
     save_dir.mkdir(parents=True, exist_ok=True)
-    metrics_file = save_dir / f"metrics_{name}.json"
+    metrics_file = save_dir / "metrics" / f"metrics_{name}.json"
     
     with open(metrics_file, 'w') as f:
         json.dump(metrics, f, indent=4)
 
 def save_model(model, metrics, name, save_dir, save_full_model):
     save_dir.mkdir(parents=True, exist_ok=True)
-    model_path = save_dir / f"{name}.pth"
+    model_path = save_dir / "models" / f"{name}.pth"
 
     if save_full_model:
         torch.save(model, model_path)

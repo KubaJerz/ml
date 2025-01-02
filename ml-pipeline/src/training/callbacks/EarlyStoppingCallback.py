@@ -9,7 +9,7 @@ class EarlyStoppingCallback(Callback):
        self.counter = 0
        self.best_metric = float('inf') if 'loss' in monitor else float('-inf')
        
-   def on_training_start(self, training_loop=None) -> bool:
+   def on_training_start(self, training_loop=None, datamodule=None) -> bool:
        return True
        
    def on_epoch_start(self, training_loop=None) -> bool:
