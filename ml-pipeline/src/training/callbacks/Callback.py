@@ -1,29 +1,37 @@
 from abc import ABC, abstractmethod
-from ..TrainLoopStrategy import TrainLoopStrategy
 
+"""
+When implementing a callback, you only need to write code for the specific
+stages of training you want to monitor/modify (like on_epoch_start()).
 
-''' When you impliment a callback you just write code for the part of the training you need (like on_epoch_start()) then the rest of the funtions you just'''
+All callback methods return a boolean:
+    - Return True to continue training
+    - Return False to break out of the current loop
+        - False in on_batch_start/end breaks the batch loop
+        - False in on_epoch_start/end breaks the epoch loop
+        - False in on_training_start/end exits training entirely
+"""
 class Callback(ABC):
     @abstractmethod
-    def on_training_start(self, training_loop: 'TrainLoopStrategy', model, datamodule) -> None:
+    def on_training_start(self, training_loop=None, datamodule=None) -> bool:
         pass
     
     @abstractmethod
-    def on_epoch_start(self, training_loop: 'TrainLoopStrategy', epoch) -> None:
+    def on_epoch_start(self, training_loop=None) -> bool:
         pass
     
     @abstractmethod
-    def on_batch_start(self, training_loop: 'TrainLoopStrategy', batch) -> None:
+    def on_batch_start(self, training_loop=None, batch=None) -> bool:
         pass
     
     @abstractmethod
-    def on_batch_end(self, training_loop: 'TrainLoopStrategy', metrics) -> None:
+    def on_batch_end(self, training_loop=None, batch_metrics=None) -> bool:
         pass
     
     @abstractmethod
-    def on_epoch_end(self, training_loop: 'TrainLoopStrategy', metrics) -> bool:
+    def on_epoch_end(self, training_loop=None) -> bool:
         pass
     
     @abstractmethod
-    def on_training_end(self, training_loop: 'TrainLoopStrategy') -> None:
+    def on_training_end(self, training_loop=None) -> bool:
         pass

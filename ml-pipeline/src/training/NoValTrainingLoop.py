@@ -24,18 +24,16 @@ class NoValTrainingLoop(TrainLoopStrategy):
             epoch_f1 = 0.0
             num_batches = 0
             
-            for batch in train_data:
+            for batch in train_loader:
                 self._call_callbacks('on_batch_start', batch)
                 
-                # Move batch to device
                 inputs, targets = batch
                 inputs = inputs.to(self.device)
                 targets = targets.to(self.device)
                 
-                # Forward pass
                 self.optimizer.zero_grad()
                 outputs = self.model(inputs)
-                loss = self.criterion(outputs, targets)
+                loss = self.criterion(outputs, targets) 
                 
                 # Calculate F1 score
                 f1 = multiclass_f1_score(
