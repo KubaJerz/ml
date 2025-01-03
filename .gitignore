@@ -59,4 +59,4 @@ venv.bak/
 # *.png
 # *.json
 # metrics/
-# desc.txt
+# desc.txt./tests/
