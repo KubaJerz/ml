@@ -31,7 +31,7 @@ def validate_core_config_structure(config):
 
     check_section_exists(config, 'data')
     data = config['data']
-    check_field(data, 'shuffle', str)
+    check_field(data, 'shuffle', bool)
     check_field(data, 'seed', int)
 
     check_section_exists(config, 'model')
@@ -42,10 +42,10 @@ def validate_core_config_structure(config):
     check_section_exists(config, 'training')
 
 def validate_split_configuration(split_type, split_ratios):
-    if split_type == "train,test":
+    if split_type == "train,test" or split_type == "train, test":
         if len(split_ratios) != 2:
             raise ValueError("train,test split type requires exactly 2 split values")
-    elif split_type == "train,test,val":
+    elif split_type == "train,test,val" or split_type == "train, test, val":
         if len(split_ratios) != 3:
             raise ValueError("train,test,val split type requires exactly 3 split values")
     else:
@@ -55,7 +55,6 @@ def validate_split_configuration(split_type, split_ratios):
         raise ValueError(f"Split ratios must sum to 1.0, got {sum(split_ratios)}")
     
     return True
-
 
 def validate_data_config(data_config):
     required_fields = {

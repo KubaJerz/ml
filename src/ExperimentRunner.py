@@ -12,7 +12,8 @@ class ExperimentRunner:
     def run(self):
         #prepare
         self._validate_core_config_structure()
-        mode = ExperimentModeFactory.create_mode(self.config)
+        factory = ExperimentModeFactory(self.config)
+        mode = factory.create_mode()
         mode.validate_mode_specific_config_structure()
         mode.setup_experimant_dir()
 

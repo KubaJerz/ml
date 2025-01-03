@@ -1,0 +1,44 @@
+data:
+  absolute_path: /kuba/Docs/model.py
+  input_channels: 1
+  input_size: 5000
+  num_classes: 3
+  output_size: 3
+  script_name: EEGDataScript
+  seed: 69
+  shuffle: 'True'
+  split_ratios:
+  - 0.7
+  - 0.3
+  split_type: train, test
+experiment:
+  mode: single
+  name: eeg_classification
+  output_dir: experiments
+model:
+  absolute_path: /kuba/Docs/model.py
+  architecture: ConvNet
+parameters:
+  activation: ReLU
+  dropout_rate: 0.3
+  hidden_blocks: 4
+  layer_depth:
+  - 4
+  - 8
+  - 16
+  - 32
+  normalization: batch
+training:
+  best_f1: 'True'
+  best_loss: 'True'
+  criterion: CrossEntropyLoss
+  device: cuda
+  early_stopping: 'False'
+  early_stopping_monitor: dev_loss
+  early_stopping_patience: 10
+  epochs: 100
+  learning_rate: 0.001
+  optimizer: Adam
+  save_full_model: 'True'
+  test_batch_size: -1
+  train_batch_size: 64

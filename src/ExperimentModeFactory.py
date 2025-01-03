@@ -23,12 +23,12 @@ class ExperimentModeFactory:
         }
 
 
-    def create_mode(self, config: dict) -> ExperimentMode:
-        mode_type = config.get('mode', 'no_mode_provided').lower()
+    def create_mode(self) -> ExperimentMode:
+        mode_type = self.config['experiment'].get('mode', 'no_mode_provided').lower()
         self._verify_valid_mode(mode_type)
 
         mode_class = self._valid_modes[mode_type]
-        return mode_class(config)
+        return mode_class(self.config)
         
     def _verify_valid_mode(self, mode_type):
         if mode_type not in self._valid_modes:
