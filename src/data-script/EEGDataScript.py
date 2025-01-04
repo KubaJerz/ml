@@ -1,3 +1,5 @@
+from BaseDataScript import BaseDataScript
+
 class EEGDataScript(BaseDataScript):
     def get_data(self):
         # Use self.config to access parameters:

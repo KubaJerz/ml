@@ -55,14 +55,14 @@ class SingleMode(ExperimentMode):
                 'input_channels': self.config['data']['input_channels'],
                 'output_size': self.config['data']['output_size'],
                 'num_classes': self.config['data']['num_classes'],
-                'hyperparams': model_config['parameters']
+                'hyperparams': self.config['parameters']
             }
-            self.model = model_class(**model_params)
+            return model_class(**model_params)
         
         except ImportError as e:
             raise ValueError(f"Failed to import model module: {e}")
         except AttributeError as e:
-            raise ValueError(f"Failed to find model class in module: {e}")
+            raise ValueError(f"Failed to find model class in module: {e}. Model class name msut be all capital verison of the file name")
         except TypeError as e:
             raise ValueError(f"Model initialization failed - incorrect parameters: {e}")
         except Exception as e:
@@ -155,13 +155,13 @@ class SingleMode(ExperimentMode):
             ))
         
         if training_config.get('best_f1', True):
-            callbacks.append(BestF1Callback())
+            callbacks.append(BestF1Callback.BestF1Callback())
 
         if training_config.get('best_loss', True):
-            callbacks.append(BestLossCallback())
+            callbacks.append(BestLossCallback.BestLossCallback())
 
         if training_config.get('plot_combined_metric', True):
-            callbacks.append(PlotCombinedMetrics())
+            callbacks.append(PlotCombinedMetrics.PlotCombinedMetrics())
             
         return callbacks
 
