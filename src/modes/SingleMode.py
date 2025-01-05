@@ -37,18 +37,14 @@ class SingleMode(ExperimentMode):
         super().setup_experimant_dir()
 
     def _setup_model(self):
-        model_config = self.config['model']
-
-        model_path = model_config.get('absolute_path')
-
+        model_path = self.config['model'].get('absolute_path')
         try:
             dir_path, file_name = os.path.split(model_path)
             module_name = os.path.splitext(file_name)[0]
-            model_class_name = module_name.upper()
             
             sys.path.append(dir_path)
             model_module = importlib.import_module(module_name)
-            model_class = getattr(model_module, model_class_name)
+            model_class = getattr(model_module, module_name.upper())
             
             model_params = {
                 'input_size': self.config['data']['input_size'],
