@@ -1,4 +1,5 @@
 from typing import Dict, Any
+from pathlib import Path
 
 def check_section_exists(config, section_name):
     if section_name not in config:
@@ -56,20 +57,31 @@ def validate_split_configuration(split_type, split_ratios):
     
     return True
 
+def _validate_data_path(path):
+        path =  Path(path)
+        if not path.exists():
+            raise FileNotFoundError(f"Data path does not exist: {path}")
+        
+        pt_files = list(path.glob('*.pt'))
+        if not pt_files:
+            raise FileNotFoundError(f"No .pt files found in {path}")
+
 def validate_data_config(data_config):
     required_fields = {
-        'num_classes': int,
-        'input_size': int,
-        'input_channels': int,
-        'output_size': int,
         'absolute_path': str,
         'script_name': str,
         'split_type': str,
         'split_ratios': (list, float),
         'shuffle': bool,
-        'seed': int
+        'seed': int,
+        'input_size': int,
+        'input_channels': int,
+        'output_size': int,
+        'num_classes': int
     }
     
+    _validate_data_path(data_config['absolute_path'])
+
     for field_name, field_type in required_fields.items():
         is_sequence = isinstance(field_type, tuple)
         check_field(data_config, field_name, field_type[1] if is_sequence else field_type, is_sequence)
