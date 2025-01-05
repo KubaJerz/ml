@@ -42,36 +42,8 @@ class EEGDataScript(BaseDataScript):
     
     def get_datasets(self) -> Union[Tuple[Dataset, Dataset], Tuple[Dataset, Dataset, Dataset]]:
         combined_dataset = self._load_datasets()
-
-        if self.config.get('shuffle', True):
-            generator = torch.Generator().manual_seed(self.config['seed'])
-            indices = torch.randperm(len(combined_dataset), generator=generator).tolist()
-            combined_dataset = [combined_dataset[i] for i in indices]
-
-
-        if self.config['split_type'] == "train,dev":
-            train_ratio = self.config['split_ratios'][0]
-            train_idx = int(len(combined_dataset) * train_ratio)
-
-            train_dataset = Subset(combined_dataset, range(train_idx))
-            dev_dataset = Subset(combined_dataset, range(train_idx, len(combined_dataset)))
-
-            return train_dataset, dev_dataset
-
-        elif self.config['split_type'] == "train,dev,test":
-            train_ratio = self.config['split_ratios'][0]
-            dev_ratio = self.config['split_ratios'][1]
-
-            train_idx = int(len(combined_dataset) * train_ratio)
-            dev_idx = int(len(combined_dataset) * (train_ratio + dev_ratio))
-            print(f'trian idx {train_idx} dev idx {dev_idx}')
-
-            train_dataset = Subset(combined_dataset, range(train_idx))
-            dev_dataset = Subset(combined_dataset, range(train_idx, dev_idx))
-            test_dataset = Subset(combined_dataset, range(dev_idx, len(combined_dataset)))
-            print(f' full size is {len(combined_dataset)} \n trian size is: {len(train_dataset)} \n dev siz is: {len(dev_dataset)} \n test size:{len(test_dataset)}')
-
-            return train_dataset, dev_dataset, test_dataset
+        return super()._split_dataset(combined_dataset)
+        
     
     def get_data_loaders(self):
         datasets = self.get_datasets()

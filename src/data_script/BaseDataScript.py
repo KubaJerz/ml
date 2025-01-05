@@ -1,6 +1,8 @@
 import torch
 from utils.validation_utils import validate_data_config
 from abc import ABC, abstractmethod
+from torch.utils.data import Dataset, ConcatDataset, DataLoader, Subset
+
 
 
 class BaseDataScript(ABC):
@@ -36,28 +38,33 @@ class BaseDataScript(ABC):
     def _validate_config(self, config):
         validate_data_config(config)
 
-    def _split_dataset(self, dataset):
-        total_size = len(dataset)
-        splits = self.config['split_ratios']
-        
+    def _split_dataset(self, combined_dataset):
+        if self.config.get('shuffle', True):
+            generator = torch.Generator().manual_seed(self.config['seed'])
+            indices = torch.randperm(len(combined_dataset), generator=generator).tolist()
+            combined_dataset = [combined_dataset[i] for i in indices]
+
+
         if self.config['split_type'] == "train,dev":
-            train_size = int(splits[0] * total_size)
-            test_size = total_size - train_size
-            
-            return torch.utils.data.random_split(
-                dataset, 
-                [train_size, test_size],
-                generator=torch.Generator().manual_seed(self.config['seed']) 
-            )
+            train_ratio = self.config['split_ratios'][0]
+            train_end_idx = int(len(combined_dataset) * train_ratio)
+
+            train_dataset = Subset(combined_dataset, range(train_end_idx))
+            dev_dataset = Subset(combined_dataset, range(train_end_idx, len(combined_dataset)))
+
+            return train_dataset, dev_dataset
+
         elif self.config['split_type'] == "train,dev,test":
-            train_size = int(splits[0] * total_size)
-            val_size = int(splits[1] * total_size)
-            test_size = total_size - train_size - val_size
-            
-            return torch.utils.data.random_split(
-                dataset, 
-                [train_size, val_size, test_size],
-                generator=torch.Generator().manual_seed(self.config['seed'])
-            )
+            train_ratio = self.config['split_ratios'][0]
+            dev_ratio = self.config['split_ratios'][1]
+
+            train_end_idx = int(len(combined_dataset) * train_ratio)
+            dev_end_idx = int(len(combined_dataset) * (train_ratio + dev_ratio))
+
+            train_dataset = Subset(combined_dataset, range(train_end_idx))
+            dev_dataset = Subset(combined_dataset, range(train_end_idx, dev_end_idx))
+            test_dataset = Subset(combined_dataset, range(dev_end_idx, len(combined_dataset)))
+
+            return train_dataset, dev_dataset, test_dataset
         else:
             raise NameError(f"{self.config['split_type']} is not valid for self.config['split_type']")
