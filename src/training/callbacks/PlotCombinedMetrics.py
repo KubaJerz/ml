@@ -1,9 +1,6 @@
 from .Callback import Callback
-from utils.logging_utils import save_metrics, save_model
 import matplotlib.pyplot as plt
 import os
-
-
 
 class PlotCombinedMetrics(Callback):
    def __init__(self):
@@ -22,20 +19,21 @@ class PlotCombinedMetrics(Callback):
        return True
        
    def on_epoch_end(self, training_loop=None) -> bool:
-        metrics = training_loop.metrics
-        save_dir = training_loop.save_dir
-
+        
         if _is_even(training_loop.current_epoch) and _is_even(training_loop.total_epochs):
-            _plot(metrics=metrics, save_dir=save_dir)
+            _plot(metrics = training_loop.metrics, save_dir = training_loop.save_dir)
             return True
+        
         elif not _is_even(training_loop.current_epoch) and not _is_even(training_loop.total_epochs):
-            _plot(metrics=metrics, save_dir=save_dir)
+            _plot(metrics = training_loop.metrics, save_dir = training_loop.save_dir)
             return True
+        
         else:
             return True
        
    def on_training_end(self, training_loop=None) -> bool:
-       return True
+        _plot(metrics = training_loop.metrics, save_dir = training_loop.save_dir)
+        return True
    
 def _is_even(num):
     return (num % 2) == 0   
@@ -72,5 +70,3 @@ def _plot(metrics, save_dir):
         plt.tight_layout()
         plt.savefig(os.path.join(save_dir,f"metrics.png"))
         plt.close()
-
-
