@@ -5,7 +5,7 @@ import importlib
 from utils.validation_utils import validate_mode_config, validate_data_config, validate_training_config, check_section_exists
 import torch
 from training.TrainingLoop import TrainingLoop
-from training.callbacks import BestF1Callback, BestLossCallback, EarlyStoppingCallback, PlotCombinedMetrics
+from training.callbacks import EarlyStoppingCallback, PlotCombinedMetrics, BestMetricCallback
 
 
 
@@ -99,7 +99,8 @@ class SingleMode(ExperimentMode):
             
             optimizer = self._create_optimizer(model, training_config)
             criterion = self._create_criterion(training_config)
-            callbacks = self._setup_callbacks(training_config)
+            callbacks = self._setup_callbacks(training_config, metrics)
+
             
             total_epochs = training_config.get('epochs', 100)
             device = training_config.get('device', 'cuda' if torch.cuda.is_available() else 'cpu')
@@ -155,7 +156,7 @@ class SingleMode(ExperimentMode):
         criterion_class = getattr(torch.nn, criterion_name)
         return criterion_class()
 
-    def _setup_callbacks(self, training_config):
+    def _setup_callbacks(self, training_config, metrics):
         callbacks = []
         
         if training_config.get('early_stopping', False):
@@ -165,17 +166,13 @@ class SingleMode(ExperimentMode):
             ))
         
         if training_config.get('best_f1', True):
-            callbacks.append(BestF1Callback.BestF1Callback())
+            callbacks.append(BestMetricCallback.BestMetricCallback(best_value=metrics['best_dev_f1'], metric_to_monitor='dev_f1'))
 
         if training_config.get('best_loss', True):
-            callbacks.append(BestLossCallback.BestLossCallback())
+            callbacks.append(BestMetricCallback.BestMetricCallback(best_value=metrics['best_dev_loss'], metric_to_monitor='dev_loss'))
+
 
         if training_config.get('plot_combined_metric', True):
             callbacks.append(PlotCombinedMetrics.PlotCombinedMetrics())
             
         return callbacks
-
-
-
-
-
