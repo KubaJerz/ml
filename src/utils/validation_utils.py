@@ -38,19 +38,22 @@ def validate_core_config_structure(config):
     check_section_exists(config, 'model')
     model = config['model']
     check_field(model, 'absolute_path', str)
+    path =  Path(model['absolute_path'])
+    if not path.is_absolute():
+        raise ValueError(f"Path must be absolute: {path}")
 
     check_section_exists(config, 'parameters')
     check_section_exists(config, 'training')
 
 def validate_split_configuration(split_type, split_ratios):
-    if split_type == "train,test" or split_type == "train, test":
+    if split_type == "train,dev":
         if len(split_ratios) != 2:
-            raise ValueError("train,test split type requires exactly 2 split values")
-    elif split_type == "train,test,val" or split_type == "train, test, val":
+            raise ValueError("train,dev split type requires exactly 2 split values")
+    elif split_type == "train,dev,test":
         if len(split_ratios) != 3:
-            raise ValueError("train,test,val split type requires exactly 3 split values")
+            raise ValueError("train,dev,test split type requires exactly 3 split values")
     else:
-        raise ValueError("split_type must be either 'train,test' or 'train,test,val'")
+        raise ValueError(f"split_type must be either 'train,dev' or 'train,dev,test' NOT {split_type}")
     
     if not abs(sum(split_ratios) - 1.0) < 1e-6:
         raise ValueError(f"Split ratios must sum to 1.0, got {sum(split_ratios)}")
@@ -59,6 +62,9 @@ def validate_split_configuration(split_type, split_ratios):
 
 def _validate_data_path(path):
         path =  Path(path)
+        if not path.is_absolute():
+            raise ValueError(f"Path must be absolute: {path}")
+        
         if not path.exists():
             raise FileNotFoundError(f"Data path does not exist: {path}")
         

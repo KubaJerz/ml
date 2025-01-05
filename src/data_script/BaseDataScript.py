@@ -1,5 +1,5 @@
 import torch
-from ..utils.validation_utils import validate_data_config
+from utils.validation_utils import validate_data_config
 from abc import ABC, abstractmethod
 
 
@@ -14,10 +14,10 @@ class BaseDataScript(ABC):
         Get datasets based on configuration.
         
         Returns:
-            If split_type is "train,test":
-                tuple: (train_dataset, test_dataset)
-            If split_type is "train,test,val":
-                tuple: (train_dataset, test_dataset, val_dataset)
+            If split_type is "train,dev":
+                tuple: (train_dataset, dev_dataset)
+            If split_type is "train,dev,test":
+                tuple: (train_dataset, dev_dataset, test_dataset)
         """
     
     @abstractmethod
@@ -26,10 +26,10 @@ class BaseDataScript(ABC):
         Get loaders based on configuration.
         
         Returns:
-            If split_type is "train,test":
-                tuple: (train_dataset, test_dataset)
-            If split_type is "train,test,val":
-                tuple: (train_dataset, test_dataset, val_dataset)
+            If split_type is "train,dev":
+                tuple: (train_dataset, dev_dataset)
+            If split_type is "train,dev,test":
+                tuple: (train_dataset, dev_dataset, test_dataset)
         """
 
 
@@ -38,9 +38,9 @@ class BaseDataScript(ABC):
 
     def _split_dataset(self, dataset):
         total_size = len(dataset)
-        splits = self.config['train_split']
+        splits = self.config['split_ratios']
         
-        if self.config['split_type'] == "train,test":
+        if self.config['split_type'] == "train,dev":
             train_size = int(splits[0] * total_size)
             test_size = total_size - train_size
             
@@ -49,7 +49,7 @@ class BaseDataScript(ABC):
                 [train_size, test_size],
                 generator=torch.Generator().manual_seed(self.config['seed']) 
             )
-        elif self.config['split_type'] == "train,test,val":
+        elif self.config['split_type'] == "train,dev,test":
             train_size = int(splits[0] * total_size)
             val_size = int(splits[1] * total_size)
             test_size = total_size - train_size - val_size
@@ -60,4 +60,4 @@ class BaseDataScript(ABC):
                 generator=torch.Generator().manual_seed(self.config['seed'])
             )
         else:
-            raise NameError(f'{self.config['split_type']} is not valid for self.config["split_type"]')
+            raise NameError(f"{self.config['split_type']} is not valid for self.config['split_type']")

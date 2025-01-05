@@ -1,5 +1,5 @@
 from .Callback import Callback
-from src.utils.logging_utils import save_metrics, save_model
+from utils.logging_utils import save_metrics, save_model
 
 class BestLossCallback(Callback):
    """Saves model when loss improves."""

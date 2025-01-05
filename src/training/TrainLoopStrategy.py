@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 import torch.nn as nn
 from typing import Dict
-from ..utils.validation_utils import validate_metrics_structure
+# from utils.validation_utils import validate_metrics_structure
 
 """Abstract base class for training loop strategies."""
 class TrainLoopStrategy(ABC):
@@ -25,11 +25,11 @@ class TrainLoopStrategy(ABC):
         """Main training loop"""
         pass
 
-    def _call_callbacks(self, function_name: str, *args, **kwargs) -> bool:
+    def _call_callbacks(self, function_name: str, **kwargs) -> bool:
         continue_training = True
         for callback in self.callbacks:
             hook = getattr(callback, function_name)
-            result = hook(self, *args, **kwargs)
+            result = hook(**kwargs)
             if result is False:
                 continue_training = False
         return continue_training

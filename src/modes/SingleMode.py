@@ -2,10 +2,10 @@ from .ExperimentMode import ExperimentMode
 from typing import Dict, Any
 import os, sys
 import importlib
-from ..utils.validation_utils import validate_mode_config, validate_data_config, validate_training_config, check_section_exists
+from utils.validation_utils import validate_mode_config, validate_data_config, validate_training_config, check_section_exists
 import torch
-from ..training.TrainingLoop import TrainingLoop
-from ..training.callbacks import BestF1Callback, BestLossCallback, EarlyStoppingCallback, PlotCombinedMetrics
+from training.TrainingLoop import TrainingLoop
+from training.callbacks import BestF1Callback, BestLossCallback, EarlyStoppingCallback, PlotCombinedMetrics
 
 
 
@@ -72,7 +72,7 @@ class SingleMode(ExperimentMode):
         try:
             script_name = self.config['data']['script_name']
             module_name = os.path.splitext(script_name)[0]
-            data_module = importlib.import_module(module_name)
+            data_module = importlib.import_module('data_script.'+module_name)
             data_script_class = getattr(data_module, module_name)
             
             data_script = data_script_class(self.config['data'])

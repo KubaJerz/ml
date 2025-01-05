@@ -12,7 +12,7 @@ class TrainingLoop(TrainLoopStrategy):
         
         self.model = self.model.to(self.device)
 
-        for epoch in tqdm(range(self.max_epochs), desc='Progress: '):
+        for epoch in tqdm(range(self.total_epochs), desc='Progress: '):
             self.current_epoch = epoch
             
             if not self._call_callbacks('on_epoch_start', training_loop=self):
@@ -23,11 +23,10 @@ class TrainingLoop(TrainLoopStrategy):
             epoch_f1 = 0.0
             
             # training loop
-            for batch in self.train_loader:
-                if not self._call_callbacks('on_batch_start', training_loop=self, batch=batch):
+            for X_batch, y_batch in self.train_loader:
+                if not self._call_callbacks('on_batch_start', training_loop=self, batch=(X_batch, y_batch)):
                     break
                     
-                X_batch, y_batch = batch
                 X_batch, y_batch = X_batch.to(self.device), y_batch.to(self.device)
                 
                 self.optimizer.zero_grad()

@@ -1,5 +1,5 @@
-from .modes.ExperimentMode import ExperimentMode
-from .modes.SingleMode import SingleMode
+from modes.ExperimentMode import ExperimentMode
+from modes.SingleMode import SingleMode
 # from .modes.RandSearchMode import RandSearchMode
 # from .modes.ResumeF1 import ResumeF1
 # from .modes.ResumeLoss import ResumeLoss

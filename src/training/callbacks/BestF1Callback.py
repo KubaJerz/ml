@@ -1,5 +1,5 @@
 from .Callback import Callback
-from src.utils.logging_utils import save_metrics, save_model
+from utils.logging_utils import save_metrics, save_model
 
 class BestF1Callback(Callback):
    """Saves model when F1 score improves."""
