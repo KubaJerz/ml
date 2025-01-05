@@ -35,7 +35,7 @@ class BestLossCallback(Callback):
         
         if current_loss < best_loss:
             self.best_loss = current_loss
-            save_model(model=training_loop.model, metrics=metrics, name=f'best_{self.metric_to_monitor}')
+            save_model(model=training_loop.model, metrics=metrics, name=f'best_{self.metric_to_monitor}', save_dir=training_loop.save_dir , save_full_model=training_loop.save_full_model)
         return True
        
    def on_training_end(self, training_loop=None) -> bool:

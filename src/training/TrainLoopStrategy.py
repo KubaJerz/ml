@@ -5,16 +5,20 @@ from typing import Dict
 
 """Abstract base class for training loop strategies."""
 class TrainLoopStrategy(ABC):
-    def __init__(self, model, optimizer, criterion, total_epochs, callbacks, device, save_dir, train_loader, dev_loader, test_loader=None, save_full_model=True):
+    def __init__(self, model, device, optimizer, criterion, metrics, callbacks, save_dir, train_loader, dev_loader, total_epochs, test_loader=None, save_full_model=True):
         self.model = model
+        self.device = device
         self.optimizer = optimizer
         self.criterion = criterion
+
+        self.metrics = metrics
         self.callbacks = callbacks
+
         self.train_loader = train_loader
         self.dev_loader = dev_loader
         self.test_loader = test_loader
-        self.device = device
         self.save_dir = save_dir
+
         self.total_epochs = total_epochs
         self.current_epoch = 0
         self.save_full_model = save_full_model

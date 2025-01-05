@@ -41,7 +41,7 @@ class EarlyStoppingCallback(Callback):
            self.counter += 1
            if self.counter >= self.patience:
                 print(f'Early stopping triggered after {self.counter} epochs without improvement at epoch: {training_loop.current_epoch}')
-                save_model(model=training_loop.model, metrics=metrics, name=f'early_stopping_epoch_{training_loop.current_epoch}')
+                save_model(model=training_loop.model, metrics=metrics, name=f'early_stopping_epoch_{training_loop.current_epoch}', save_dir=training_loop.save_dir , save_full_model=training_loop.save_full_model)
                 return False
        return True
        

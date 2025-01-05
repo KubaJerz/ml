@@ -43,7 +43,7 @@ def _is_even(num):
 def _plot(metrics, save_dir):
         lossi, devlossi = metrics.get('train_loss'), metrics.get('dev_loss') 
         f1i, devf1i = metrics.get('train_f1'), metrics.get('dev_f1')
-        best_f1_dev, best_loss_dev = metrics.get('best_f1_dev'), metrics.get('best_loss_dev')
+        best_dev_f1, best_dev_loss = metrics.get('best_dev_f1'), metrics.get('best_dev_loss')
 
         plt.figure(figsize=(12, 6))
         
@@ -53,8 +53,8 @@ def _plot(metrics, save_dir):
         plt.title('Loss vs Epochs')
         plt.xlabel('Epochs')
         plt.ylabel('Loss')
-        plt.axhline(best_loss_dev, color='g', linestyle='--', label=f'Best Dev Loss: {best_loss_dev:.3f}')
-        #plt.text(0, best_loss_dev - 0.02, f'Best Loss: {best_loss_dev:.4f}', color='g', fontsize=10)
+        plt.axhline(best_dev_loss, color='g', linestyle='--', label=f'Best Dev Loss: {best_dev_loss:.3f}')
+        #plt.text(0, best_dev_loss - 0.02, f'Best Loss: {best_dev_loss:.4f}', color='g', fontsize=10)
         plt.legend()
         
         # Plot F1 scores
@@ -64,8 +64,8 @@ def _plot(metrics, save_dir):
         plt.title('F1 Score vs Epochs')
         plt.xlabel('Epochs')
         plt.ylabel('F1 Score')
-        plt.axhline(best_f1_dev, color='g', linestyle='--', label=f'Best Dev F1: {best_f1_dev:.3f}')
-        #plt.text(0, best_f1_dev - 0.02, f'Best F1: {best_f1_dev:.4f}', color='g', fontsize=10)
+        plt.axhline(best_dev_f1, color='g', linestyle='--', label=f'Best Dev F1: {best_dev_f1:.3f}')
+        #plt.text(0, best_dev_f1 - 0.02, f'Best F1: {best_dev_f1:.4f}', color='g', fontsize=10)
         plt.legend()
 
         

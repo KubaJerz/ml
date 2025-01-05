@@ -88,6 +88,14 @@ class SingleMode(ExperimentMode):
     def _setup_training(self, model, dataloaders):
         try:
             training_config = self.config['training']
+            metrics = {
+                        'train_loss': [],
+                        'dev_loss': [],
+                        'train_f1': [],
+                        'dev_f1': [],
+                        'best_dev_f1': float('-inf'),
+                        'best_dev_loss': float('inf'),
+                    }
             
             optimizer = self._create_optimizer(model, training_config)
             criterion = self._create_criterion(training_config)
@@ -104,6 +112,7 @@ class SingleMode(ExperimentMode):
                     model=model,
                     optimizer=optimizer,
                     criterion=criterion,
+                    metrics=metrics,
                     total_epochs=total_epochs,
                     callbacks=callbacks,
                     device=device,
@@ -119,6 +128,7 @@ class SingleMode(ExperimentMode):
                     model=model,
                     optimizer=optimizer,
                     criterion=criterion,
+                    metrics=metrics,
                     total_epochs=total_epochs,
                     callbacks=callbacks,
                     device=device,

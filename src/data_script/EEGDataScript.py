@@ -29,13 +29,16 @@ class EEGDataScript(BaseDataScript):
            
     def _load_datasets(self) -> List[Dataset]:
         all_datasets = []
+        i = 0 
         for file_path in tqdm(sorted(self.data_path.glob('*.pt')), desc='Loading datasets'):
-            try:
-                dataset = EEGDataset(str(file_path))
-                all_datasets.append(dataset)
-            except Exception as e:
-                print(f"Error loading {file_path}: {str(e)}")
-                continue
+            if i < 1:
+                try:
+                    dataset = EEGDataset(str(file_path))
+                    all_datasets.append(dataset)
+                except Exception as e:
+                    print(f"Error loading {file_path}: {str(e)}")
+                    continue
+            i += 1
 
         return ConcatDataset(all_datasets)
 
