@@ -80,7 +80,8 @@ def validate_data_config(data_config):
         'num_classes': int
     }
     
-    _validate_data_path(data_config['absolute_path'])
+    _validate_data_path(data_config.get('absolute_path', f"No 'absolute_path' was provided"))
+
 
     for field_name, field_type in required_fields.items():
         is_sequence = isinstance(field_type, tuple)
