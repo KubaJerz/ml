@@ -1,5 +1,5 @@
 experiment:
-  name: yamlrefactor00
+  name: fullsave
   mode: single
 
 data:
@@ -8,8 +8,8 @@ data:
   use_full: False
   use_percent: 0.15
 
-  split_type: train,dev
-  split_ratios: [0.8, 0.2]
+  split_type: train,dev,test
+  split_ratios: [0.8, 0.1, 0.1]
   shuffle: True
   seed: 69
 
@@ -25,7 +25,7 @@ parameters:
   param: none
 
 training:
-  epochs: 5
+  epochs: 15
   train_batch_size: 128
   test_batch_size: 512
 
@@ -37,6 +37,7 @@ training:
   save_full_model: True
 
 callbacks:
+  plot_metrics_live: False
   best_f1: True
   best_loss: True
   early_stopping: False

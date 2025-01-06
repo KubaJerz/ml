@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 import os
 
 class PlotCombinedMetrics(Callback):
-   def __init__(self):
-       pass
+   def __init__(self, plot_live):
+       self.plot_live = plot_live
 
    def on_training_start(self, training_loop=None) -> bool:
        return True
@@ -19,15 +19,14 @@ class PlotCombinedMetrics(Callback):
        return True
        
    def on_epoch_end(self, training_loop=None) -> bool:
-        
-        if _is_even(training_loop.current_epoch) and _is_even(training_loop.total_epochs):
-            _plot(metrics = training_loop.metrics, save_dir = training_loop.save_dir)
-            return True
-        
-        elif not _is_even(training_loop.current_epoch) and not _is_even(training_loop.total_epochs):
-            _plot(metrics = training_loop.metrics, save_dir = training_loop.save_dir)
-            return True
-        
+        if self.plot_live:
+            if _is_even(training_loop.current_epoch) and _is_even(training_loop.total_epochs):
+                _plot(metrics = training_loop.metrics, save_dir = training_loop.save_dir)
+                return True
+            
+            elif not _is_even(training_loop.current_epoch) and not _is_even(training_loop.total_epochs):
+                _plot(metrics = training_loop.metrics, save_dir = training_loop.save_dir)
+                return True
         else:
             return True
        

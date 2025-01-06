@@ -5,7 +5,7 @@ import importlib
 from utils.validation_utils import validate_mode_config, validate_data_config, validate_training_config, check_section_exists, validate_model_config
 import torch
 from training.TrainingLoop import TrainingLoop
-from training.callbacks import EarlyStoppingCallback, PlotCombinedMetrics, BestMetricCallback
+from training.callbacks import EarlyStoppingCallback, PlotCombinedMetrics, BestMetricCallback, TrainingCompletionCallback
 
 
 
@@ -169,8 +169,8 @@ class SingleMode(ExperimentMode):
         if callback_config.get('best_loss', True):
             callbacks.append(BestMetricCallback.BestMetricCallback(best_value=metrics['best_dev_loss'], metric_to_monitor='dev_loss'))
 
-
-        if callback_config.get('plot_combined_metric', True):
-            callbacks.append(PlotCombinedMetrics.PlotCombinedMetrics())
+        #plots just at the end or also every other epoch is live
+        callbacks.append(PlotCombinedMetrics.PlotCombinedMetrics(plot_live = callback_config.get('plot_metrics_live', True)))
+        callbacks.append(TrainingCompletionCallback.TrainingCompletionCallback())
             
         return callbacks

@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 import torch.nn as nn
 from typing import Dict
+from utils.SpecificMessageFilter import SpecificMessageFilter
+import logging
 # from utils.validation_utils import validate_metrics_structure
 
 """Abstract base class for training loop strategies."""
@@ -22,6 +24,9 @@ class TrainLoopStrategy(ABC):
         self.total_epochs = total_epochs
         self.current_epoch = 0
         self.save_full_model = save_full_model
+
+        logging.getLogger().addFilter(SpecificMessageFilter())
+
 
         
     @abstractmethod

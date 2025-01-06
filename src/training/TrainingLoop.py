@@ -67,29 +67,30 @@ class TrainingLoop(TrainLoopStrategy):
             if not self._call_callbacks('on_epoch_end', training_loop=self):
                 break
 
-        if self.test_loader:
-            test_loss = 0.0
-            test_f1 = 0.0
-            test_predictions = []
-            test_targets = []
-            self.model.eval()
+        # this is done in the eval stage after the hyper parameter search
+        # if self.test_loader:
+        #     test_loss = 0.0
+        #     test_f1 = 0.0
+        #     test_predictions = []
+        #     test_targets = []
+        #     self.model.eval()
 
-            for X_batch, y_batch in self.test_loader:
-                    X_batch, y_batch = X_batch.to(self.device), y_batch.to(self.device)
-                    test_logits = self.model(X_batch)
-                    loss = self.criterion(test_logits, y_batch).item()
-                    f1 = multiclass_f1_score(test_logits, torch.argmax(y_batch, dim=1),num_classes=self.model.num_classes, average="macro").item()
+        #     for X_batch, y_batch in self.test_loader:
+        #             X_batch, y_batch = X_batch.to(self.device), y_batch.to(self.device)
+        #             test_logits = self.model(X_batch)
+        #             loss = self.criterion(test_logits, y_batch).item()
+        #             f1 = multiclass_f1_score(test_logits, torch.argmax(y_batch, dim=1),num_classes=self.model.num_classes, average="macro").item()
     
-                    test_loss += loss
-                    test_f1 += f1
+        #             test_loss += loss
+        #             test_f1 += f1
                     
-                    test_predictions.extend(torch.argmax(test_logits, dim=1).cpu().numpy())
-                    test_targets.extend(torch.argmax(y_batch, dim=1).cpu().numpy())
+        #             test_predictions.extend(torch.argmax(test_logits, dim=1).cpu().numpy())
+        #             test_targets.extend(torch.argmax(y_batch, dim=1).cpu().numpy())
             
-            self.metrics['test_loss'] = test_loss / len(self.test_loader)
-            self.metrics['test_f1'] = test_f1 / len(self.test_loader)
-            self.metrics['test_predictions'] = test_predictions
-            self.metrics['test_targets'] = test_targets
+        #     self.metrics['test_loss'] = test_loss / len(self.test_loader)
+        #     self.metrics['test_f1'] = test_f1 / len(self.test_loader)
+        #     self.metrics['test_predictions'] = test_predictions
+        #     self.metrics['test_targets'] = test_targets
             
 
         if not self._call_callbacks('on_training_end', training_loop=self):
