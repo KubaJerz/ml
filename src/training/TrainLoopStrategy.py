@@ -3,9 +3,7 @@ import torch.nn as nn
 from typing import Dict
 from utils.SpecificMessageFilter import SpecificMessageFilter
 import logging
-# from utils.validation_utils import validate_metrics_structure
 
-"""Abstract base class for training loop strategies."""
 class TrainLoopStrategy(ABC):
     def __init__(self, model, device, optimizer, criterion, metrics, callbacks, save_dir, train_loader, dev_loader, total_epochs, test_loader=None, save_full_model=True):
         self.model = model
@@ -27,8 +25,6 @@ class TrainLoopStrategy(ABC):
 
         logging.getLogger().addFilter(SpecificMessageFilter())
 
-
-        
     @abstractmethod
     def fit(self, dataloaders) -> Dict[str, float]:
         """Main training loop"""
@@ -42,4 +38,3 @@ class TrainLoopStrategy(ABC):
             if result is False:
                 continue_training = False
         return continue_training
-    
