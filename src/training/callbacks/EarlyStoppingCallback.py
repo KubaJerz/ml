@@ -2,12 +2,12 @@ from .Callback import Callback
 from utils.logging_utils import save_metrics, save_model
 
 class EarlyStoppingCallback(Callback):
-   def __init__(self, monitor='dev_loss', patience=3, min_delta=0.0):
+   def __init__(self, best_val_so_far, monitor='dev_loss', patience=3, min_delta=0.0):
        self.monitor = monitor
        self.patience = patience
        self.min_delta = min_delta
        self.counter = 0
-       self.best_metric = float('inf') if 'loss' in monitor else float('-inf')
+       self.best_val_so_far = best_val_so_far
        
    def on_training_start(self, training_loop=None, datamodule=None) -> bool:
        return True
@@ -25,17 +25,17 @@ class EarlyStoppingCallback(Callback):
        #True means continue training
        #False means stop training
        metrics = training_loop.metrics
-       current = metrics.get(self.monitor)
+       current = metrics.get(f"best_{self.monitor}")
        if current is None:
            return True
            
        if 'loss' in self.monitor:
-           improved = current < (self.best_metric - self.min_delta)
+           improved = current < (self.best_val_so_far - self.min_delta)
        else:
-           improved = current > (self.best_metric + self.min_delta)
+           improved = current > (self.best_val_so_far + self.min_delta)
            
        if improved:
-           self.best_metric = current
+           self.best_val_so_far = current
            self.counter = 0
        else:
            self.counter += 1

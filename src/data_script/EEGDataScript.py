@@ -44,8 +44,17 @@ class EEGDataScript(BaseDataScript):
 
     
     def get_datasets(self) -> Union[Tuple[Dataset, Dataset], Tuple[Dataset, Dataset, Dataset]]:
-        combined_dataset = self._load_datasets()
-        return super()._split_dataset(combined_dataset)
+        full_dataset = self._load_datasets()
+        if not self.config.get('use_full', True):
+            percent_to_use = self.config.get('use_percent', 0.1)
+            if not (0.0 < percent_to_use <= 1.0):
+                raise ValueError("The 'use_percent' must be a float between 0 and 1.")
+            subset_length = int(len(full_dataset) * percent_to_use)
+            indices = list(range(subset_length))
+            to_use_dataset = Subset(full_dataset, indices)
+        else:
+            to_use_dataset = full_dataset
+        return super()._split_dataset(to_use_dataset)
         
     
     def get_data_loaders(self):

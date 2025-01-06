@@ -2,7 +2,7 @@ from .ExperimentMode import ExperimentMode
 from typing import Dict, Any
 import os, sys
 import importlib
-from utils.validation_utils import validate_mode_config, validate_data_config, validate_training_config, check_section_exists
+from utils.validation_utils import validate_mode_config, validate_data_config, validate_training_config, check_section_exists, validate_model_config
 import torch
 from training.TrainingLoop import TrainingLoop
 from training.callbacks import EarlyStoppingCallback, PlotCombinedMetrics, BestMetricCallback
@@ -32,11 +32,11 @@ class SingleMode(ExperimentMode):
         
         return True      
             
-
     def setup_experimant_dir(self):
         super().setup_experimant_dir()
 
     def _setup_model(self):
+        validate_model_config(self.config['model'])
         model_path = self.config['model'].get('absolute_path')
         try:
             dir_path, file_name = os.path.split(model_path)
@@ -95,7 +95,7 @@ class SingleMode(ExperimentMode):
             
             optimizer = self._create_optimizer(model, training_config)
             criterion = self._create_criterion(training_config)
-            callbacks = self._setup_callbacks(training_config, metrics)
+            callbacks = self._setup_callbacks(self.config['callbacks'], metrics)
 
             
             total_epochs = training_config.get('epochs', 100)
@@ -152,23 +152,25 @@ class SingleMode(ExperimentMode):
         criterion_class = getattr(torch.nn, criterion_name)
         return criterion_class()
 
-    def _setup_callbacks(self, training_config, metrics):
+    def _setup_callbacks(self, callback_config, metrics):
         callbacks = []
         
-        if training_config.get('early_stopping', False):
-            callbacks.append(EarlyStoppingCallback(
-                patience=training_config.get('early_stopping_patience', 10),
-                monitor=training_config.get('early_stopping_monitor', 'dev_loss')
+        if callback_config.get('early_stopping', False):
+            best_val_so_far = metrics[f"best_{callback_config.get('early_stopping_monitor', 'dev_loss')}"]
+            callbacks.append(EarlyStoppingCallback.EarlyStoppingCallback(
+                best_val_so_far = best_val_so_far,
+                patience=callback_config.get('early_stopping_patience', 10),
+                monitor=callback_config.get('early_stopping_monitor', 'dev_loss')
             ))
         
-        if training_config.get('best_f1', True):
+        if callback_config.get('best_f1', True):
             callbacks.append(BestMetricCallback.BestMetricCallback(best_value=metrics['best_dev_f1'], metric_to_monitor='dev_f1'))
 
-        if training_config.get('best_loss', True):
+        if callback_config.get('best_loss', True):
             callbacks.append(BestMetricCallback.BestMetricCallback(best_value=metrics['best_dev_loss'], metric_to_monitor='dev_loss'))
 
 
-        if training_config.get('plot_combined_metric', True):
+        if callback_config.get('plot_combined_metric', True):
             callbacks.append(PlotCombinedMetrics.PlotCombinedMetrics())
             
         return callbacks

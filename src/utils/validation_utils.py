@@ -29,22 +29,14 @@ def validate_core_config_structure(config):
     experiment = config['experiment']
     check_field(experiment, 'name', str)
     check_field(experiment, 'mode', str)
-
     check_section_exists(config, 'data')
-    data = config['data']
-    check_field(data, 'shuffle', bool)
-    check_field(data, 'seed', int)
-
     check_section_exists(config, 'model')
-    model = config['model']
-    check_field(model, 'absolute_path', str)
-    path =  Path(model['absolute_path'])
-    if not path.is_absolute():
-        raise ValueError(f"Path must be absolute: {path}")
-
     check_section_exists(config, 'parameters')
     check_section_exists(config, 'training')
+    check_section_exists(config, 'callbacks')
 
+    return True
+    
 def validate_split_configuration(split_type, split_ratios):
     if split_type == "train,dev":
         if len(split_ratios) != 2:
@@ -59,18 +51,6 @@ def validate_split_configuration(split_type, split_ratios):
         raise ValueError(f"Split ratios must sum to 1.0, got {sum(split_ratios)}")
     
     return True
-
-def _validate_data_path(path):
-        path =  Path(path)
-        if not path.is_absolute():
-            raise ValueError(f"Path must be absolute: {path}")
-        
-        if not path.exists():
-            raise FileNotFoundError(f"Data path does not exist: {path}")
-        
-        pt_files = list(path.glob('*.pt'))
-        if not pt_files:
-            raise FileNotFoundError(f"No .pt files found in {path}")
 
 def validate_data_config(data_config):
     required_fields = {
@@ -94,6 +74,13 @@ def validate_data_config(data_config):
         check_field(data_config, field_name, field_type[1] if is_sequence else field_type, is_sequence)
     
     validate_split_configuration(data_config['split_type'], data_config['split_ratios'])
+    return True
+
+def validate_model_config(model_config):
+    check_field(model_config, 'absolute_path', str)
+    path =  Path(model_config['absolute_path'])
+    if not path.is_absolute():
+        raise ValueError(f"Path must be absolute: {path}")
     return True
 
 def validate_training_config(training_config):
@@ -128,3 +115,15 @@ def validate_metrics_structure(metrics):
         check_field(metrics, field_name, field_type)
     
     return True
+
+def _validate_data_path(path):
+        path =  Path(path)
+        if not path.is_absolute():
+            raise ValueError(f"Path must be absolute: {path}")
+        
+        if not path.exists():
+            raise FileNotFoundError(f"Data path does not exist: {path}")
+        
+        pt_files = list(path.glob('*.pt'))
+        if not pt_files:
+            raise FileNotFoundError(f"No .pt files found in {path}")

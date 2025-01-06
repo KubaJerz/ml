@@ -30,9 +30,9 @@ class TrainingLoop(TrainLoopStrategy):
                 X_batch, y_batch = X_batch.to(self.device), y_batch.to(self.device)
                 
                 self.optimizer.zero_grad()
-                logits = self.model.forward(X_batch)
-                loss = self.criterion(logits, y_batch)
-                f1 = multiclass_f1_score(logits, torch.argmax(y_batch, dim=1), num_classes=self.model.num_classes, average="macro").item()
+                out = self.model.forward(X_batch)
+                loss = self.criterion(out, y_batch)
+                f1 = multiclass_f1_score(out, torch.argmax(y_batch, dim=1), num_classes=self.model.num_classes, average="macro").item()
                 loss.backward()
                 self.optimizer.step()
                 
@@ -55,9 +55,9 @@ class TrainingLoop(TrainLoopStrategy):
             with torch.no_grad():
                 for X_batch, y_batch in self.dev_loader:
                     X_batch, y_batch = X_batch.to(self.device), y_batch.to(self.device)
-                    devlogits = self.model(X_batch)
-                    dev_loss = self.criterion(devlogits, y_batch).item()
-                    dev_f1 = multiclass_f1_score(devlogits, torch.argmax(y_batch, dim=1), num_classes=self.model.num_classes, average="macro").item()
+                    devout = self.model(X_batch)
+                    dev_loss = self.criterion(devout, y_batch).item()
+                    dev_f1 = multiclass_f1_score(devout, torch.argmax(y_batch, dim=1), num_classes=self.model.num_classes, average="macro").item()
                     test_epoch_loss += dev_loss
                     test_epoch_f1 += dev_f1
             self.metrics['dev_loss'].append(test_epoch_loss / len(self.dev_loader))
