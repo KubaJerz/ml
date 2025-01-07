@@ -1,5 +1,5 @@
 from .Callback import Callback
-from utils.logging_utils import save_metrics, save_model
+from ...utils.logging_utils import save_model
 
 class EarlyStoppingCallback(Callback):
    def __init__(self, best_val_so_far, monitor='dev_loss', patience=3, min_delta=0.0):

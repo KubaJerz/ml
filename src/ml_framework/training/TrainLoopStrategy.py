@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 import torch.nn as nn
 from typing import Dict
-from utils.SpecificMessageFilter import SpecificMessageFilter
+from ..utils.SpecificMessageFilter import SpecificMessageFilter
 import logging
 
 class TrainLoopStrategy(ABC):

@@ -1,45 +1,39 @@
 experiment:
   name: fullsave
   mode: single
-
 data:
   absolute_path: /Users/kuba/Documents/data/Raw/pt_ekyn_500hz
   script_name: EEGDataScript
-  use_full: False
+  use_full: false
   use_percent: 0.15
-
   split_type: train,dev,test
-  split_ratios: [0.8, 0.1, 0.1]
-  shuffle: True
+  split_ratios:
+  - 0.8
+  - 0.1
+  - 0.1
+  shuffle: true
   seed: 69
-
   input_size: 5000
   input_channels: 1
   output_size: 3
   num_classes: 3
-
 model:
   absolute_path: /Users/kuba/projects/ml/tests/sample_model.py
-
 parameters:
   param: none
-
 training:
   epochs: 15
   train_batch_size: 128
   test_batch_size: 512
-
   optimizer: Adam
   learning_rate: 0.001
   criterion: CrossEntropyLoss
-
   device: cpu
-  save_full_model: True
-
+  save_full_model: true
 callbacks:
-  plot_metrics_live: False
-  best_f1: True
-  best_loss: True
-  early_stopping: False
+  plot_metrics_live: false
+  best_f1: true
+  best_loss: true
+  early_stopping: false
   early_stopping_patience: 3
   early_stopping_monitor: dev_loss

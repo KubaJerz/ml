@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Any
 from pathlib import Path
 
 def check_section_exists(config, section_name):
@@ -29,6 +29,10 @@ def validate_core_config_structure(config):
     experiment = config['experiment']
     check_field(experiment, 'name', str)
     check_field(experiment, 'mode', str)
+    check_field(experiment, 'project_root', str)
+    path =  Path(experiment['project_root'])
+    if not path.is_absolute():
+        raise ValueError(f"Path must be absolute: {path}")
     check_section_exists(config, 'data')
     check_section_exists(config, 'model')
     check_section_exists(config, 'parameters')

@@ -1,5 +1,5 @@
 import argparse
-from ExperimentRunner import ExperimentRunner
+from .ExperimentRunner import ExperimentRunner
 
 def main():
     parser = argparse.ArgumentParser()

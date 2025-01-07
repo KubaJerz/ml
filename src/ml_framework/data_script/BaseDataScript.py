@@ -1,5 +1,5 @@
 import torch
-from utils.validation_utils import validate_data_config
+from ..utils.validation_utils import validate_data_config
 from abc import ABC, abstractmethod
 from torch.utils.data import Dataset, ConcatDataset, DataLoader, Subset
 

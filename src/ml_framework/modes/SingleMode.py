@@ -1,20 +1,20 @@
 from .ExperimentMode import ExperimentMode
 from typing import Dict, Any
+from pathlib import Path
+
 import os, sys
 import importlib
-from utils.validation_utils import validate_mode_config, validate_data_config, validate_training_config, check_section_exists, validate_model_config
+from ..utils.validation_utils import validate_mode_config, validate_data_config, validate_training_config, check_section_exists, validate_model_config
 import torch
-from training.TrainingLoop import TrainingLoop
-from training.callbacks import EarlyStoppingCallback, PlotCombinedMetrics, BestMetricCallback, TrainingCompletionCallback
-
+from ..training.TrainingLoop import TrainingLoop
+from ..training.callbacks import EarlyStoppingCallback, PlotCombinedMetrics, BestMetricCallback, TrainingCompletionCallback
 
 
 class SingleMode(ExperimentMode):
     def __init__(self, config):
         self.config = config
-        self.dir = None
+        self.dir = super()._construct_experiment_path()
 
-    
     def execute(self):
         model = self._setup_model() 
         dataloaders = self._setup_data() #when we implinet this go back to validate_mode_specific_config_structure and fic this
@@ -32,8 +32,8 @@ class SingleMode(ExperimentMode):
         
         return True      
             
-    def setup_experimant_dir(self):
-        super().setup_experimant_dir()
+    # def setup_experimant_dir(self):
+    #     super().setup_experimant_dir()
 
     def _setup_model(self):
         validate_model_config(self.config['model'])
@@ -68,7 +68,7 @@ class SingleMode(ExperimentMode):
         try:
             script_name = self.config['data']['script_name']
             module_name = os.path.splitext(script_name)[0]
-            data_module = importlib.import_module('data_script.'+module_name)
+            data_module = importlib.import_module('..data_script.'+module_name, package=__package__)
             data_script_class = getattr(data_module, module_name)
             
             data_script = data_script_class(self.config['data'])
