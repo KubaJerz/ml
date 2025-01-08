@@ -5,11 +5,11 @@ When implementing a callback, you only need to write code for the specific
 stages of training you want to monitor/modify (like on_epoch_start()).
 
 All callback methods return a boolean:
-    - Return True to continue training
-    - Return False to break out of the current loop
-        - False in on_batch_start/end breaks the batch loop
-        - False in on_epoch_start/end breaks the epoch loop
-        - False in on_training_start/end exits training entirely
+True: Continue the current loop or training process.
+False: Break or exit based on the callback type:
+    on_batch_start/on_batch_end: Stops processing the current epoch's batches and moves to the next epoch.
+    on_epoch_start/on_epoch_end: Halts further epochs and moves to training completion.
+    on_training_start/on_training_end: Immediately exits training entire
 """
 class Callback(ABC):
     @abstractmethod

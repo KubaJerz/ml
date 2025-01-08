@@ -4,7 +4,6 @@ from abc import ABC, abstractmethod
 from torch.utils.data import Dataset, ConcatDataset, DataLoader, Subset
 
 
-
 class BaseDataScript(ABC):
     def __init__(self, config: dict):
         self._validate_config(config)
@@ -68,3 +67,20 @@ class BaseDataScript(ABC):
             return train_dataset, dev_dataset, test_dataset
         else:
             raise NameError(f"{self.config['split_type']} is not valid for self.config['split_type']")
+        
+    def create_loader(self, dataset, batch_size_key):
+        base_config = {
+        'num_workers': self.config.get('num_workers', 0),
+        'pin_memory': self.config.get('pin_memory', True),
+    }
+
+        batch_size = self.config.get(batch_size_key, 32)
+        
+        if batch_size == -1:
+            batch_size = len(dataset)
+            
+        return DataLoader(
+            dataset,
+            batch_size=batch_size,
+            **base_config
+        )

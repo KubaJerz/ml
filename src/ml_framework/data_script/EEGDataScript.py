@@ -29,16 +29,13 @@ class EEGDataScript(BaseDataScript):
            
     def _load_datasets(self) -> List[Dataset]:
         all_datasets = []
-        i = 0 
         for file_path in tqdm(sorted(self.data_path.glob('*.pt')), desc='Loading datasets'):
-            if i < 1:
-                try:
-                    dataset = EEGDataset(str(file_path))
-                    all_datasets.append(dataset)
-                except Exception as e:
-                    print(f"Error loading {file_path}: {str(e)}")
-                    continue
-            i += 1
+            try:
+                dataset = EEGDataset(str(file_path))
+                all_datasets.append(dataset)
+            except Exception as e:
+                print(f"Error loading {file_path}: {str(e)}")
+                continue
 
         return ConcatDataset(all_datasets)
 
@@ -59,22 +56,16 @@ class EEGDataScript(BaseDataScript):
     
     def get_data_loaders(self):
         datasets = self.get_datasets()
-        loader_config = {
-            'batch_size': self.config.get('batch_size', 128),
-            'num_workers': self.config.get('num_workers', 0),
-            'pin_memory': self.config.get('pin_memory', True)
-        }
-        
         if self.config['split_type'] == "train,dev":
             train_dataset, dev_dataset = datasets
             return (
-                DataLoader(train_dataset, shuffle=False, **loader_config),
-                DataLoader(dev_dataset, shuffle=False, **loader_config)
+                super().create_loader(train_dataset, 'train_batch_size'),
+                super().create_loader(dev_dataset, 'dev_batch_size')
             )
-        else:
+        else:  # train,dev,test
             train_dataset, dev_dataset, test_dataset = datasets
             return (
-                DataLoader(train_dataset, shuffle=False, **loader_config),
-                DataLoader(dev_dataset, shuffle=False, **loader_config),
-                DataLoader(test_dataset, shuffle=False, **loader_config)
+                super().create_loader(train_dataset, 'train_batch_size'),
+                super().create_loader(dev_dataset, 'dev_batch_size'),
+                super().create_loader(test_dataset, 'test_batch_size')
             )
