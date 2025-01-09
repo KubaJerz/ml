@@ -15,6 +15,7 @@ class ExperimentModeFactory:
     def create_mode(self) -> ExperimentMode:
         mode_type = self.config['experiment'].get('mode', 'no_mode_provided').lower()
         self._verify_valid_mode(mode_type)
+        self.config['experiment']['mode'] = mode_type
 
         mode_class = self._valid_modes[mode_type]
         return mode_class(self.config)

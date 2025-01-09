@@ -1,5 +1,6 @@
 from typing import Any
 from pathlib import Path
+import json
 
 def check_section_exists(config, section_name):
     if section_name not in config:
@@ -122,14 +123,39 @@ def validate_metrics_structure(metrics):
         check_field(metrics, field_name, field_type)
     return True
 
+def validate_path_is_absolute(path):
+    path =  Path(path)
+    if not path.is_absolute():
+        raise ValueError(f"Path must be absolute: {path}")
+
+def validate_path_exists(path):
+    path =  Path(path)
+    if not path.exists():
+            raise FileNotFoundError(f"Data path does not exist: {path}")
+
 def _validate_data_path(path):
         path =  Path(path)
-        if not path.is_absolute():
-            raise ValueError(f"Path must be absolute: {path}")
-        
-        if not path.exists():
-            raise FileNotFoundError(f"Data path does not exist: {path}")
+
+        validate_path_is_absolute(path)
+        validate_path_exists(path)
         
         pt_files = list(path.glob('*.pt'))
         if not pt_files:
             raise FileNotFoundError(f"No .pt files found in {path}")
+        
+def validate_metrics_file_format(metrics_path: Path, required_metrics):
+    validate_path_exists(metrics_path)
+        
+    try:
+        with open(metrics_path, 'r') as f:
+            metrics = json.load(f)
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Invalid JSON format in metrics file: {e}")
+    except Exception as e:
+        raise ValueError(f"Error reading metrics file: {e}")
+
+    missing_metrics = [m for m in required_metrics if m not in metrics]
+    if missing_metrics:
+        raise ValueError(f"Metrics file missing required metrics: {missing_metrics}")
+        
+    return metrics

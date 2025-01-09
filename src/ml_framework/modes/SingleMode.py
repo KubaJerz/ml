@@ -13,6 +13,7 @@ from ..callbacks.CallbackFactory import CallbackFactory
 class SingleMode(ExperimentMode):
     def __init__(self, config):
         self.config = config
+        self.validate_mode_specific_config_structure()
         self.dir = super()._construct_experiment_path()
 
     def execute(self):
