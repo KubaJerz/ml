@@ -4,7 +4,7 @@ from pathlib import Path
 
 import os, sys
 import importlib
-from ..utils.validation_utils import validate_mode_config, validate_data_config, validate_training_config, check_section_exists, validate_model_config
+from ..utils.validation_utils import validate_mode_config, validate_data_config, validate_training_config, check_section_exists, validate_model_config, validate_dataloader_count
 import torch
 from ..training.TrainingLoop import TrainingLoop
 from ..training.callbacks import EarlyStoppingCallback, PlotCombinedMetrics, BestMetricCallback, TrainingCompletionCallback
@@ -17,7 +17,7 @@ class SingleMode(ExperimentMode):
 
     def execute(self):
         model = self._setup_model() 
-        dataloaders = self._setup_data() #when we implinet this go back to validate_mode_specific_config_structure and fic this
+        dataloaders = self._setup_data()
         training_loop = self._setup_training(model=model, dataloaders=dataloaders)
         training_loop.fit()
 
@@ -82,64 +82,61 @@ class SingleMode(ExperimentMode):
             raise RuntimeError(f"Error loading data: {e}")
 
     def _setup_training(self, model, dataloaders):
-        try:
-            training_config = self.config['training']
-            metrics = {
-                        'train_loss': [],
-                        'dev_loss': [],
-                        'train_f1': [],
-                        'dev_f1': [],
-                        'best_dev_f1': float('-inf'),
-                        'best_dev_loss': float('inf'),
-                    }
-            
-            optimizer = self._create_optimizer(model, training_config)
-            criterion = self._create_criterion(training_config)
-            callbacks = self._setup_callbacks(self.config['callbacks'], metrics)
+        validate_dataloader_count(dataloaders)
 
-            
-            total_epochs = training_config.get('epochs', 100)
-            device = training_config.get('device', 'cuda' if torch.cuda.is_available() else 'cpu')
-            save_dir = self.dir
-            save_full_model = training_config.get('save_full_model', True)
+        training_params = self._get_training_parameters()
+        training_components = self._initialize_training_components(model)
+        return self._create_training_loop(model=model, dataloaders=dataloaders, training_params=training_params, **training_components)
 
-            if len(dataloaders) == 3:
-                train_loader, dev_loader, test_loader = dataloaders
-                return TrainingLoop(
-                    model=model,
-                    optimizer=optimizer,
-                    criterion=criterion,
-                    metrics=metrics,
-                    total_epochs=total_epochs,
-                    callbacks=callbacks,
-                    device=device,
-                    save_dir=save_dir,
-                    train_loader=train_loader,
-                    dev_loader=dev_loader,
-                    test_loader=test_loader,
-                    save_full_model=save_full_model
-                )
-            elif len(dataloaders) == 2:
-                train_loader, dev_loader = dataloaders
-                return TrainingLoop(
-                    model=model,
-                    optimizer=optimizer,
-                    criterion=criterion,
-                    metrics=metrics,
-                    total_epochs=total_epochs,
-                    callbacks=callbacks,
-                    device=device,
-                    save_dir=save_dir,
-                    train_loader=train_loader,
-                    dev_loader=dev_loader,
-                    save_full_model=save_full_model
-                )
-            else:
-                raise RuntimeError(f"Unsupported number of dataloaders: {len(dataloaders)}. Must be 2 or 3.")
+    def _get_training_parameters(self) -> Dict[str, Any]:
+        training_config = self.config.get('training', {})
+        device = self._get_valid_device(training_config.get('device'))
+        return {
+            'total_epochs': training_config.get('epochs', 100),
+            'device': device,
+            'save_dir': self.dir,
+            'save_full_model': training_config.get('save_full_model', True)
+        }
+    
+    def _get_valid_device(self, requested_device) -> str:
+        if not requested_device:
+            return 'cuda' if torch.cuda.is_available() else 'cpu'
+            
+        if requested_device == 'cpu':
+            return 'cpu'
+            
+        if requested_device.startswith('cuda'):
+            if not torch.cuda.is_available():
+                raise ValueError("CUDA device requested but CUDA is not available")
                 
-        except Exception as e:
-            raise RuntimeError(f"Failed to setup training loop: {str(e)}")
-
+            if ':' in requested_device:
+                device_id = int(requested_device.split(':')[1])
+                if device_id >= torch.cuda.device_count():
+                    raise ValueError(f"Requested GPU {device_id} but only {torch.cuda.device_count()} GPUs available")
+            
+            return requested_device
+                    
+    def _initialize_training_components(self, model: torch.nn.Module) -> Dict[str, Any]:
+        training_config = self.config.get('training')
+        metrics = self._initialize_metrics()
+        
+        return {
+            'optimizer': self._create_optimizer(model, training_config),
+            'criterion': self._create_criterion(training_config),
+            'callbacks': self._setup_callbacks(self.config.get('callbacks', {}), metrics),
+            'metrics': metrics
+        }
+    
+    def _initialize_metrics(self):
+        return {
+            'train_loss': [],
+            'dev_loss': [],
+            'train_f1': [],
+            'dev_f1': [],
+            'best_dev_f1': float('-inf'),
+            'best_dev_loss': float('inf')
+        }
+    
     def _create_optimizer(self, model, training_config):
         optimizer_name = training_config.get('optimizer', 'Adam')
         learning_rate = training_config.get('learning_rate', 0.001)
@@ -174,3 +171,15 @@ class SingleMode(ExperimentMode):
         callbacks.append(TrainingCompletionCallback.TrainingCompletionCallback())
             
         return callbacks
+    
+    def _create_training_loop(self, model, dataloaders, training_params, **components) -> TrainingLoop:
+        train_loader, dev_loader, *test = dataloaders
+        
+        return TrainingLoop(
+            model=model,
+            train_loader=train_loader,
+            dev_loader=dev_loader,
+            test_loader=test[0] if test else None,
+            **training_params,
+            **components
+        )

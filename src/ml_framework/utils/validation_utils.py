@@ -98,6 +98,11 @@ def validate_training_config(training_config):
         check_field(training_config, field_name, field_type)
     return True
 
+def validate_dataloader_count(dataloaders):
+    dataloader_count = len(dataloaders)
+    if dataloader_count not in [2, 3]:
+        raise ValueError(f"Expected 2 or 3 dataloaders, got {dataloader_count}")
+
 def validate_mode_config(config, expected_mode):
     if config.get('experiment', {}).get('mode') != expected_mode:
         raise ValueError(f"Mode must be '{expected_mode}'")
@@ -115,7 +120,6 @@ def validate_metrics_structure(metrics):
     
     for field_name, field_type in required_fields.items():
         check_field(metrics, field_name, field_type)
-    
     return True
 
 def _validate_data_path(path):
