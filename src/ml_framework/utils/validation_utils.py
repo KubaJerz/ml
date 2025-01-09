@@ -64,6 +64,8 @@ def validate_data_config(data_config):
         'split_ratios': (list, float),
         'shuffle': bool,
         'seed': int,
+        'train_batch_size': int,
+        'dev_batch_size': int,
         'input_size': int,
         'input_channels': int,
         'output_size': int,
@@ -90,14 +92,10 @@ def validate_model_config(model_config):
 def validate_training_config(training_config):
     required_fields = {
         'epochs': int,
-        'train_batch_size': int,
-        'test_batch_size': int,
         'learning_rate': float
     }
-    
     for field_name, field_type in required_fields.items():
         check_field(training_config, field_name, field_type)
-    
     return True
 
 def validate_mode_config(config, expected_mode):
