@@ -1,5 +1,5 @@
 from .Callback import Callback
-from ...utils.logging_utils import save_model
+from ..utils.logging_utils import save_model
 
 class BestMetricCallback(Callback):
     
