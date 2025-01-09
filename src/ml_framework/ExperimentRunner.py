@@ -1,7 +1,7 @@
 import yaml
 from typing import Dict, Any
 from .ExperimentModeFactory import ExperimentModeFactory
-from .utils.validation_utils import validate_core_config_structure
+from .utils.validation_utils import validate_core_config_structure, validate_data_config, validate_training_config, validate_model_config
 from pathlib import Path
 import os
 
@@ -54,3 +54,6 @@ class ExperimentRunner:
 
     def _validate_core_config_structure(self):
         validate_core_config_structure(self.config)
+        validate_data_config(self.config['data'])
+        validate_training_config(self.config['training'])
+        validate_model_config(self.config['model'])
