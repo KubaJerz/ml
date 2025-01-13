@@ -1,7 +1,7 @@
 from .modes.ExperimentMode import ExperimentMode
 from .modes.SingleMode import SingleMode
 # from .modes.RandSearchMode import RandSearchMode
-# from .modes.Resume import Resume
+from .modes.ResumeMode import ResumeMode
 
 class ExperimentModeFactory:    
     def __init__(self, config: dict):
@@ -9,7 +9,7 @@ class ExperimentModeFactory:
         self._valid_modes = {
             'single': SingleMode,
             # 'random_search': RandSearchMode,
-            # 'resume': Resume
+            'resume': ResumeMode
         }
 
     def create_mode(self) -> ExperimentMode:

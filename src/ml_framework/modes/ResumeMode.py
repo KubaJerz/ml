@@ -41,13 +41,13 @@ class ResumeMode(SingleMode):
             raise ValueError(f"'resume_type': {resume_config['resume_type']} is invalid. Must be one of: {self.VALID_RESUME_TYPES}")
 
         metrics_name = resume_config['metrics_path'].split(sep='/')[-1]
-        model_name = resume_config['model_name'].split(sep='/')[-1]
+        model_name = resume_config['model_path'].split(sep='/')[-1]
 
         if resume_config['resume_type'].lower() not in metrics_name:
-            warnings.warn(f"Resume type ({resume_config['resume_type']}) is never in metrics file name")
+            print(f"Resume type ({resume_config['resume_type']}) is never in metrics file name FFF")
 
         if resume_config['resume_type'].lower() not in model_name:
-            warnings.warn(f"Resume type ({resume_config['resume_type']}) is never in model file name")
+            print(f"Resume type ({resume_config['resume_type']}) is never in model file name GG")
                
         return True
 
@@ -56,22 +56,23 @@ class ResumeMode(SingleMode):
             metrics_path = Path(self.config['resume']['metrics_path'])
             with open(metrics_path, 'r') as f:
                 metrics = json.load(f)
-            return metrics
-            
+            return metrics 
         except Exception as e:
             raise RuntimeError(f"Failed to load metrics from {metrics_path}: {e}")
 
     def _setup_model(self):
         model_path = Path(self.config['resume']['model_path'])
-        obj = torch.load(model_path)
+        try:
+            obj = torch.load(model_path)
 
-        if isinstance(obj, dict) and all(isinstance(v, torch.Tensor) for v in obj.values()):
-            print("Loading model from state dict.")
-            model = super()._setup_model()
-            model.load_state_dict(obj)
-            return model
-        elif hasattr(obj, "state_dict"):
-            print("Loading model from file contains a full model.")
-            return obj
-        else:
-            raise ValueError("Unknown model format.")
+            if isinstance(obj, dict) and all(isinstance(v, torch.Tensor) for v in obj.values()):
+                print("Loading model from state dict.")
+                model = super()._setup_model()
+                model.load_state_dict(obj)
+                return model
+            elif hasattr(obj, "state_dict"):
+                print("Loading model instance (not state dict format)")
+                return obj
+        except Exception as e:
+            raise ValueError(f"Unknown model format: {e}")
+            

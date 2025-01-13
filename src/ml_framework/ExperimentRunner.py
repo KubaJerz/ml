@@ -17,8 +17,7 @@ class ExperimentRunner:
         #prepare
         factory = ExperimentModeFactory(self.config)
         mode = factory.create_mode()
-        mode.validate_mode_specific_config_structure()
-
+        
         #execute
         mode.execute()
 
