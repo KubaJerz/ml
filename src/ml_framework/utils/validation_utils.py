@@ -86,9 +86,8 @@ def validate_data_config(data_config):
 
 def validate_model_config(model_config):
     check_field(model_config, 'absolute_path', str)
-    path =  Path(model_config['absolute_path'])
-    if not path.is_absolute():
-        raise ValueError(f"Path must be absolute: {path}")
+    validate_path_is_absolute(model_config.get('absolute_path'))
+    validate_path_exists(model_config.get('absolute_path'))
     return True
 
 def validate_training_config(training_config):

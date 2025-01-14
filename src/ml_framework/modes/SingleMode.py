@@ -4,6 +4,7 @@ from typing import Dict, Any
 import os, sys
 import importlib
 from ..utils.validation_utils import validate_mode_config, validate_dataloader_count, validate_data_config, validate_training_config, validate_model_config
+from ..utils.import_utils import import_from_path
 import torch
 from ..training.TrainingLoop import TrainingLoop
 from ..callbacks.CallbackFactory import CallbackFactory
@@ -42,92 +43,97 @@ class SingleMode(ExperimentMode):
             (self.dir / subdir).mkdir(exist_ok=False)
 
     def _setup_model(self):
-        model_path = self.config['model'].get('absolute_path')
-        if not model_path:
-            raise ValueError("Config missing 'absolute_path' in model section")
+        path_to_model = self.config['model'].get('absolute_path')
+        model_class = import_from_path(path_to_model)
 
-        if not os.path.isabs(model_path):
-            raise ValueError(f"Model path must be absolute: {model_path}")
-        if not os.path.exists(model_path):
-            raise ValueError(f"Model file does not exist: {model_path}")
-            
-        try:
-            dir_path, file_name = os.path.split(model_path)
-            module_name = os.path.splitext(file_name)[0]
-            
-            sys.path.insert(0, dir_path)
-            try:
-                model_module = importlib.import_module(module_name)
-                model_class = getattr(model_module, module_name.upper())
-                
-                model_params = {
+        model_params = {
                     'input_size': self.config['data']['input_size'],
                     'input_channels': self.config['data']['input_channels'],
                     'output_size': self.config['data']['output_size'],
                     'num_classes': self.config['data']['num_classes'],
                     'hyperparams': self.config['parameters']
                 }
-                return model_class(**model_params)
-            finally:
-                sys.path.pop(0)
+        model = model_class(**model_params)
         
-        except ImportError as e:
-            raise ValueError(f"Failed to import model module from '{model_path}': {e}")
-        except AttributeError as e:
-            raise ValueError(f"Failed to find model class in module: {e}. Model class name must be all capital version of the file name")
-        except TypeError as e:
-            raise ValueError(f"Model initialization failed - incorrect parameters: {e}")
-        except Exception as e:
-            raise ValueError(f"Error setting up model: {e}")
+        return model.get_data_loaders()
+
+        # if not model_path:
+        #     raise ValueError("Config missing 'absolute_path' in model section")
+
+        # if not os.path.isabs(model_path):
+        #     raise ValueError(f"Model path must be absolute: {model_path}")
+        # if not os.path.exists(model_path):
+        #     raise ValueError(f"Model file does not exist: {model_path}")
+            
+        # try:
+        #     dir_path, file_name = os.path.split(model_path)
+        #     module_name = os.path.splitext(file_name)[0]
+            
+        #     sys.path.insert(0, dir_path)
+        #     try:
+        #         model_module = importlib.import_module(module_name)
+        #         model_class = getattr(model_module, module_name.upper())
+                
+        #         model_params = {
+        #             'input_size': self.config['data']['input_size'],
+        #             'input_channels': self.config['data']['input_channels'],
+        #             'output_size': self.config['data']['output_size'],
+        #             'num_classes': self.config['data']['num_classes'],
+        #             'hyperparams': self.config['parameters']
+        #         }
+        #         return model_class(**model_params)
+        #     finally:
+        #         sys.path.pop(0)
+        
+        # except ImportError as e:
+        #     raise ValueError(f"Failed to import model module from '{model_path}': {e}")
+        # except AttributeError as e:
+        #     raise ValueError(f"Failed to find model class in module: {e}. Model class name must be all capital version of the file name")
+        # except TypeError as e:
+        #     raise ValueError(f"Model initialization failed - incorrect parameters: {e}")
+        # except Exception as e:
+        #     raise ValueError(f"Error setting up model: {e}")
 
     def _setup_data(self):
-        try:
-            script_path = self.config['data'].get('script_absolute_path')
-            if not script_path:
-                raise ValueError("Config missing 'script_absolute_path' in data section")
+        path_to_script = self.config['data'].get('script_absolute_path')
+        data_script_class = import_from_path(path_to_script)
+        data_script = data_script_class(self.config['data'])
+        return data_script.get_data_loaders()
 
-            if not os.path.isabs(script_path):
-                raise ValueError(f"Script path must be absolute: {script_path}")
-            if not os.path.exists(script_path):
-                raise ValueError(f"Script file does not exist: {script_path}")
-            
-            dir_path, file_name = os.path.split(script_path)
-            module_name = os.path.splitext(file_name)[0]
-            
-            sys.path.insert(0, dir_path)
-            try:
-                data_module = importlib.import_module(module_name)
-                
-                data_script_class = getattr(data_module, module_name)
-                
-                data_script = data_script_class(self.config['data'])
-                return data_script.get_data_loaders()
-                
-            finally:
-                sys.path.pop(0)
-                
-        except ImportError as e:
-            raise ValueError(f"Failed to import data script from '{script_path}': {e}")
-        except AttributeError as e:
-            raise ValueError(f"Failed to find data script class '{module_name}' in module: {e}")
-        except Exception as e:
-            raise ValueError(f"Error loading data: {e}")
+
 
         # try:
-        #     script_name = self.config['data']['script_name']
-        #     module_name = os.path.splitext(script_name)[0]
-        #     data_module = importlib.import_module('..data_script.'+module_name, package=__package__)
-        #     data_script_class = getattr(data_module, module_name)
+        #     script_path = self.config['data'].get('script_absolute_path')
+        #     if not script_path:
+        #         raise ValueError("Config missing 'script_absolute_path' in data section")
+
+        #     if not os.path.isabs(script_path):
+        #         raise ValueError(f"Script path must be absolute: {script_path}")
+        #     if not os.path.exists(script_path):
+        #         raise ValueError(f"Script file does not exist: {script_path}")
             
-        #     data_script = data_script_class(self.config['data'])
-        #     return data_script.get_data_loaders()
+        #     dir_path, file_name = os.path.split(script_path)
+        #     module_name = os.path.splitext(file_name)[0]
             
+        #     sys.path.insert(0, dir_path)
+        #     try:
+        #         data_module = importlib.import_module(module_name)
+                
+        #         data_script_class = getattr(data_module, module_name)
+                
+        #         data_script = data_script_class(self.config['data'])
+        #         return data_script.get_data_loaders()
+                
+        #     finally:
+        #         sys.path.pop(0)
+                
         # except ImportError as e:
-        #     raise RuntimeError(f"Failed to import data script {script_name}: {e}")
+        #     raise ValueError(f"Failed to import data script from '{script_path}': {e}")
         # except AttributeError as e:
-        #     raise RuntimeError(f"Failed to find data script class {module_name}: {e}")
+        #     raise ValueError(f"Failed to find data script class '{module_name}' in module: {e}")
         # except Exception as e:
-        #     raise RuntimeError(f"Error loading data: {e}")
+        #     raise ValueError(f"Error loading data: {e}")
+
 
     def _setup_training(self, model, dataloaders):
         validate_dataloader_count(dataloaders)
