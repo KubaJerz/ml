@@ -1,6 +1,6 @@
 from .modes.ExperimentMode import ExperimentMode
 from .modes.SingleMode import SingleMode
-# from .modes.RandSearchMode import RandSearchMode
+from .modes.RandomSearchMode import RandomSearchMode
 from .modes.ResumeMode import ResumeMode
 
 class ExperimentModeFactory:    
@@ -8,7 +8,7 @@ class ExperimentModeFactory:
         self.config = config
         self._valid_modes = {
             'single': SingleMode,
-            # 'random_search': RandSearchMode,
+            'random_search': RandomSearchMode,
             'resume': ResumeMode
         }
 

@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
+from ..utils.validation_utils import validate_path_exists
 
 
 class ExperimentMode(ABC):
@@ -17,8 +18,7 @@ class ExperimentMode(ABC):
         project_root = Path(self.config['experiment']['project_root'])
         experiment_name = self.config['experiment']['name']
         
-        if not project_root.exists():
-            raise ValueError(f"Project root does not exist: {project_root}")
+        validate_path_exists(project_root)
             
         experiment_path = project_root / 'experiments' / experiment_name
         return experiment_path

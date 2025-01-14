@@ -131,7 +131,7 @@ def validate_path_is_absolute(path):
 def validate_path_exists(path):
     path =  Path(path)
     if not path.exists():
-            raise FileNotFoundError(f"Data path does not exist: {path}")
+            raise FileNotFoundError(f"Path does not exist: {path}")
 
 def _validate_data_path(path):
         path =  Path(path)
