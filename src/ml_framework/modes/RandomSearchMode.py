@@ -3,7 +3,7 @@ import random
 import copy
 from .ExperimentMode import ExperimentMode
 from .SingleMode import SingleMode
-from ..utils.validation_utils import check_section_exists, validate_mode_config, validate_path_exists
+from ..utils.validation_utils import check_section_exists, validate_mode_config, check_field
 
 class RandomSearchMode(ExperimentMode): 
 
@@ -31,13 +31,16 @@ class RandomSearchMode(ExperimentMode):
             raise ValueError(f"Experiment name must contain 'search' in in for random search mode. This does not: {self.config['experiment']['name']}")
         
         validate_mode_config(self.config, "random_search")
+        check_section_exists(self.config, 'sampling_control')
+        check_field(self.config['sampling_control'], 'seed', int)
+        check_field(self.config['sampling_control'], 'num_trials', int)
+
         check_section_exists(self.config, 'search_space')
-        if 'num_trials' not in self.config['training']:
-            raise ValueError("Training config must specify 'num_trials' for random search")
             
         return True
         
     def _sample_hyperparameters(self):
+        random.seed(self.config['sampling_control']['seed'])
         search_space = self.config['search_space']
         hyperparams = {}
         
@@ -79,7 +82,7 @@ class RandomSearchMode(ExperimentMode):
         return construct_trial_dir
         
     def execute(self):
-        num_trials = self.config['training']['num_trials']
+        num_trials = self.config['sampling_control']['num_trials']
         
         for trial in range(num_trials):
             hyperparams = self._sample_hyperparameters()
