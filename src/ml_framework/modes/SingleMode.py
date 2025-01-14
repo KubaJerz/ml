@@ -11,10 +11,13 @@ from ..callbacks.CallbackFactory import CallbackFactory
 
 
 class SingleMode(ExperimentMode):
-    def __init__(self, config):
+    def __init__(self, config, experiment_dir_constructor=None):
         self.config = config
         self.validate_mode_specific_config_structure()
-        self.dir = super()._construct_experiment_path()
+        if experiment_dir_constructor == None:
+            self.dir = super()._construct_experiment_path()
+        else:
+            self.dir = experiment_dir_constructor()
 
     def execute(self):
         model = self._setup_model() 

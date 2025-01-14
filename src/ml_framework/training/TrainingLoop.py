@@ -52,8 +52,8 @@ class TrainingLoop(TrainLoopStrategy):
             self.metrics['train_f1'].append(epoch_f1 / len(self.train_loader))
 
             # dev loop
-            test_epoch_loss = 0.0
-            test_epoch_f1 = 0.0
+            dev_epoch_loss = 0.0
+            dev_epoch_f1 = 0.0
             self.model.eval()
             with torch.no_grad():
                 for X_batch, y_batch in self.dev_loader:
@@ -64,10 +64,10 @@ class TrainingLoop(TrainLoopStrategy):
                         
                     dev_loss = self.criterion(devout, y_batch).item()
                     dev_f1 = multiclass_f1_score(devout, y_batch, num_classes=self.model.num_classes, average="macro").item()
-                    test_epoch_loss += dev_loss
-                    test_epoch_f1 += dev_f1
-            self.metrics['dev_loss'].append(test_epoch_loss / len(self.dev_loader))
-            self.metrics['dev_f1'].append(test_epoch_f1 / len(self.dev_loader))
+                    dev_epoch_loss += dev_loss
+                    dev_epoch_f1 += dev_f1
+            self.metrics['dev_loss'].append(dev_epoch_loss / len(self.dev_loader))
+            self.metrics['dev_f1'].append(dev_epoch_f1 / len(self.dev_loader))
 
             
             if not self._call_callbacks('on_epoch_end', training_loop=self):
