@@ -25,6 +25,8 @@ class RandomSearchMode(ExperimentMode):
         self.validate_mode_specific_config_structure()
         self.dir = super()._construct_experiment_path()
         super()._save_config()
+        random.seed(self.config['sampling_control']['seed'])
+
         
     def validate_mode_specific_config_structure(self):
         if 'search' not in self.config['experiment']['name']:
@@ -39,8 +41,13 @@ class RandomSearchMode(ExperimentMode):
             
         return True
         
+    def _round_sampled_value(self, param, value, rounding_config):
+        if param in rounding_config:
+            return round(value, rounding_config[param])
+        return value
+
     def _sample_hyperparameters(self):
-        random.seed(self.config['sampling_control']['seed'])
+        rounding_config = self.config['sampling_control'].get('rounding', {})
         search_space = self.config['search_space']
         hyperparams = {}
         
@@ -48,7 +55,8 @@ class RandomSearchMode(ExperimentMode):
             if isinstance(space, list):
                 hyperparams[param] = random.choice(space)
             elif isinstance(space, dict) and 'min' in space and 'max' in space:
-                hyperparams[param] = random.uniform(space['min'], space['max'])
+                sampled_value = random.uniform(space['min'], space['max'])
+                hyperparams[param] = self._round_sampled_value(param, sampled_value, rounding_config)
             elif isinstance(space, (int, float, str)):
                 hyperparams[param] = space
             else:
@@ -83,7 +91,6 @@ class RandomSearchMode(ExperimentMode):
         
     def execute(self):
         num_trials = self.config['sampling_control']['num_trials']
-        
         for trial in range(num_trials):
             hyperparams = self._sample_hyperparameters()
             trial_config = self._create_trial_config(trial, hyperparams)

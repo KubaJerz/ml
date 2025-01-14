@@ -31,9 +31,9 @@ def validate_core_config_structure(config):
     check_field(experiment, 'name', str)
     check_field(experiment, 'mode', str)
     check_field(experiment, 'project_root', str)
-    path =  Path(experiment['project_root'])
-    if not path.is_absolute():
-        raise ValueError(f"Path must be absolute: {path}")
+    validate_path_is_absolute(Path(experiment['project_root']))
+    validate_path_exists(Path(experiment['project_root']))
+
     check_section_exists(config, 'data')
     check_section_exists(config, 'model')
     check_section_exists(config, 'parameters')
