@@ -5,8 +5,7 @@ import os
 from tqdm import tqdm
 from pathlib import Path
 
-from .BaseDataScript import BaseDataScript
-
+from ml_framework.data_script.BaseDataScript import BaseDataScript
 
 class EEGDataset(Dataset):
     def __init__(self, raw_data_path):
@@ -25,7 +24,7 @@ class EEGDataset(Dataset):
 class EEGDataScript(BaseDataScript):    
     def __init__(self, config: dict):
         super().__init__(config)
-        self.data_path = Path(self.config['absolute_path'])
+        self.data_path = Path(self.config['data_absolute_path'])
            
     def _load_datasets(self) -> List[Dataset]:
         all_datasets = []

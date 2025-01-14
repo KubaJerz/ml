@@ -59,8 +59,8 @@ def validate_split_configuration(split_type, split_ratios):
 
 def validate_data_config(data_config):
     required_fields = {
-        'absolute_path': str,
-        'script_name': str,
+        'data_absolute_path': str,
+        'script_absolute_path': str,
         'split_type': str,
         'split_ratios': (list, float),
         'shuffle': bool,
@@ -72,13 +72,14 @@ def validate_data_config(data_config):
         'output_size': int,
         'num_classes': int
     }
-    
-    _validate_data_path(data_config.get('absolute_path', f"No 'absolute_path' was provided"))
-
-
     for field_name, field_type in required_fields.items():
         is_sequence = isinstance(field_type, tuple)
         check_field(data_config, field_name, field_type[1] if is_sequence else field_type, is_sequence)
+
+    validate_path_is_absolute(data_config.get('script_absolute_path'))
+    validate_path_exists(data_config.get('script_absolute_path'))
+
+    _validate_data_path(data_config.get('data_absolute_path', f"No 'data_absolute_path' was provided"))
     
     validate_split_configuration(data_config['split_type'], data_config['split_ratios'])
     return True
