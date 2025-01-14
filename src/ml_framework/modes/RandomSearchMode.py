@@ -5,7 +5,21 @@ from .ExperimentMode import ExperimentMode
 from .SingleMode import SingleMode
 from ..utils.validation_utils import check_section_exists, validate_mode_config
 
-class RandomSearchMode(ExperimentMode):    
+class RandomSearchMode(ExperimentMode): 
+
+    PARAMETER_LOCATIONS = {
+        'epochs': 'training',
+        'learning_rate': 'training',
+        'train_batch_size': 'data',
+        'dev_batch_size': 'data',
+        'test_batch_size': 'data',
+        'hidden_blocks': 'parameters',
+        'layer_depth': 'parameters',
+        'dropout_rate': 'parameters',
+        'activation': 'parameters',
+        'normalization': 'parameters'
+    }
+
     def __init__(self, config):
         self.config = config
         self.validate_mode_specific_config_structure()
@@ -35,17 +49,25 @@ class RandomSearchMode(ExperimentMode):
                 hyperparams[param] = space
             else:
                 raise ValueError(f"Invalid search space format for parameter: {param}")
-                
         return hyperparams
         
     def _create_trial_config(self, trial_num: int, hyperparams: dict):
+        """Create config for single mode"""
         trial_config = copy.deepcopy(self.config)
         trial_config['experiment']['name'] = f"trial_{trial_num}"
         trial_config['experiment']['mode'] = "single"
-        trial_config['parameters'] = hyperparams
+
+        for param_name, value in hyperparams.items():
+            if param_name not in self.PARAMETER_LOCATIONS:
+                print(f"Unknown parameter location for: {param_name}, will place it in 'parameters' which are passed to the model __init__")
+                section = 'parameters'
+            else:
+                section = self.PARAMETER_LOCATIONS[param_name]
+            trial_config[section][param_name] = value
+
         del trial_config['search_space']
         return trial_config
-        
+    
     def _get_trial_dir_constructor(self, trial_num: int):
         trial_dir = self.dir / f"trial_{trial_num}"
         
@@ -64,7 +86,10 @@ class RandomSearchMode(ExperimentMode):
             trial_dir_constructor = self._get_trial_dir_constructor(trial)
             
             print(f"\nStarting Trial {trial}/{num_trials}")
-            print("Hyperparameters:", hyperparams)
+            print("Hyperparameters:")
+            for name, value in hyperparams.items():
+                section = self.PARAMETER_LOCATIONS.get(name, 'parameters')
+                print(f"  {name} ({section}): {value}") 
             
             try:
                 single_mode = SingleMode(config=trial_config, experiment_dir_constructor=trial_dir_constructor)
