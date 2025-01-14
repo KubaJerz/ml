@@ -159,3 +159,4 @@ def validate_metrics_file_format(metrics_path: Path, required_metrics):
         raise ValueError(f"Metrics file missing required metrics: {missing_metrics}")
         
     return metrics
+

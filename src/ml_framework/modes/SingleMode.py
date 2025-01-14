@@ -3,7 +3,7 @@ from typing import Dict, Any
 
 import os, sys
 import importlib
-from ..utils.validation_utils import validate_mode_config, validate_dataloader_count
+from ..utils.validation_utils import validate_mode_config, validate_dataloader_count, validate_data_config, validate_training_config, validate_model_config
 import torch
 from ..training.TrainingLoop import TrainingLoop
 from ..callbacks.CallbackFactory import CallbackFactory
@@ -18,6 +18,9 @@ class SingleMode(ExperimentMode):
             self.dir = super()._construct_experiment_path()
         else:
             self.dir = experiment_dir_constructor()
+        super()._save_config()
+        self._create_subdirectories()
+
 
     def execute(self):
         model = self._setup_model() 
@@ -27,7 +30,16 @@ class SingleMode(ExperimentMode):
 
     def validate_mode_specific_config_structure(self):
         validate_mode_config(self.config, "single")
+
+        validate_data_config(self.config['data'])
+        validate_training_config(self.config['training'])
+        validate_model_config(self.config['model'])
         return True 
+    
+    def _create_subdirectories(self):
+        subdirs = ['models', 'metrics']
+        for subdir in subdirs:
+            (self.dir / subdir).mkdir(exist_ok=False)
 
     def _setup_model(self):
         model_path = self.config['model'].get('absolute_path')

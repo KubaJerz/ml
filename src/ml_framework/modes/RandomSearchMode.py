@@ -23,7 +23,8 @@ class RandomSearchMode(ExperimentMode):
     def __init__(self, config):
         self.config = config
         self.validate_mode_specific_config_structure()
-        self.dir = self._construct_experiment_path()
+        self.dir = super()._construct_experiment_path()
+        super()._save_config()
         
     def validate_mode_specific_config_structure(self):
         if 'search' not in self.config['experiment']['name']:
@@ -35,15 +36,6 @@ class RandomSearchMode(ExperimentMode):
             raise ValueError("Training config must specify 'num_trials' for random search")
             
         return True
-    
-    def _construct_experiment_path(self):
-        project_root = Path(self.config['experiment']['project_root'])
-        experiment_name = self.config['experiment']['name']
-        
-        validate_path_exists(project_root)
-            
-        experiment_path = project_root / experiment_name
-        return experiment_path
         
     def _sample_hyperparameters(self):
         search_space = self.config['search_space']
