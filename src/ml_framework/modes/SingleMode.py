@@ -54,8 +54,7 @@ class SingleMode(ExperimentMode):
                     'hyperparams': self.config['parameters']
                 }
         model = model_class(**model_params)
-
-        return model.get_data_loaders()
+        return model
 
 
     def _setup_data(self):
