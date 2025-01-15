@@ -79,7 +79,8 @@ def validate_data_config(data_config):
     validate_path_is_absolute(data_config.get('script_absolute_path'))
     validate_path_exists(data_config.get('script_absolute_path'))
 
-    _validate_data_path(data_config.get('data_absolute_path', f"No 'data_absolute_path' was provided"))
+    validate_path_is_absolute(data_config.get('data_absolute_path'))
+    validate_path_exists(data_config.get('data_absolute_path'))
     
     validate_split_configuration(data_config['split_type'], data_config['split_ratios'])
     return True
@@ -132,16 +133,6 @@ def validate_path_exists(path):
     path =  Path(path)
     if not path.exists():
             raise FileNotFoundError(f"Path does not exist: {path}")
-
-def _validate_data_path(path):
-        path =  Path(path)
-
-        validate_path_is_absolute(path)
-        validate_path_exists(path)
-        
-        pt_files = list(path.glob('*.pt'))
-        if not pt_files:
-            raise FileNotFoundError(f"No .pt files found in {path}")
         
 def validate_metrics_file_format(metrics_path: Path, required_metrics):
     validate_path_exists(metrics_path)
