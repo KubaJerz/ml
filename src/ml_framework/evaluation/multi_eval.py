@@ -96,17 +96,12 @@ class MultiModelEvaluator:
             axes[0, 1].plot(metrics['train_f1'], label=f'Train F1 {model_name}', color=color)
             axes[0, 1].plot(metrics['dev_f1'], label=f'Validation F1 {model_name}', color=color, linestyle='--')
 
-    def _create_summary_tables(self, axes: np.ndarray, model_metrics: Dict[str, Dict[str, Any]], top_n: int = 2) -> None:
+    def _create_summary_tables(self, axes: np.ndarray, model_metrics: Dict[str, Dict[str, Any]], top_n: int = 3) -> None:
         self._create_metric_table(axes[1, 0], model_metrics, 'best_dev_loss', 'Best Dev Loss', top_n, higher_better=False)
         self._create_metric_table(axes[1, 1], model_metrics, 'best_dev_f1', 'Best Dev F1', top_n, higher_better=True)
 
-    def _create_metric_table(self, ax: plt.Axes, model_metrics: Dict[str, Dict[str, Any]], 
-                           metric_key: str, title: str, top_n: int, higher_better: bool) -> None:
-        sorted_models = sorted(
-            model_metrics.items(),
-            key=lambda x: x[1]['metrics'][metric_key],
-            reverse=higher_better
-        )[:top_n]
+    def _create_metric_table(self, ax: plt.Axes, model_metrics: Dict[str, Dict[str, Any]], metric_key: str, title: str, top_n: int, higher_better: bool) -> None:
+        sorted_models = sorted(model_metrics.items(),key=lambda x: x[1]['metrics'][metric_key],reverse=higher_better)[:top_n]
 
         data = []
         cell_colors = []
