@@ -162,6 +162,33 @@ callbacks:
   early_stopping: True
   early_stopping_patience: 3
 ```
+
+## Model Evaluation
+The framework provides two evaluation tools for analyzing training results: ```SingleModelEvaluator``` and ```MultiModelEvaluator```
+
+### Single Model Evaluation
+
+```python
+from ml_framework.evaluation.single_eval import SingleModelEvaluator
+
+# Point to experiment directory
+evaluator = SingleModelEvaluator("/path/to/experiment/directory")
+evaluator.evaluate()
+```
+
+### Multi-Model Evaluation
+
+```python
+from ml_framework.evaluation.multi_eval import MultiModelEvaluator
+
+# Point to directory containing multiple model runs
+evaluator = MultiModelEvaluator("/path/to/search/experiments")
+evaluator.evaluate()
+```
+
+
+
+
 # IMPORTANT NOTES
 
 ## Random Search Configuration
@@ -216,3 +243,4 @@ Examples:
 
 
 - This naming convention applies regardless of whether using train/val or train/val/test splits
+
