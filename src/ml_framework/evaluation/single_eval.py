@@ -17,10 +17,11 @@ class SingleModelEvaluator:
         self.evaluation_dir = Path(evaluation_dir)
         self._validate_evaluation_dir()
         
-    def evaluate(self, test_config: Dict[str, Any] = None) -> None:
+    def evaluate(self):
+        trial_config = self._load_trial_config()
         metrics = self._load_metrics()
-        best_f1_cf = self._compute_confusion_matrix('bestF1', test_config)
-        best_loss_cf = self._compute_confusion_matrix('bestLoss', test_config)
+        best_f1_cf = self._compute_confusion_matrix('best_dev_f1', trial_config)
+        best_loss_cf = self._compute_confusion_matrix('best_dev_loss', trial_config)
         
         self._create_evaluation_plot(metrics, best_f1_cf, best_loss_cf)
 
@@ -32,12 +33,12 @@ class SingleModelEvaluator:
             raise NotADirectoryError(f"Specified path is not a directory: {self.evaluation_dir}")
         
         required_files = [
-            '*metrics_best_dev_f1.json',
-            '*metrics_best_dev_loss.json',
-            'metrics_full.json',
-            '*best_dev_f1.pth',
-            '*best_dev_loss.pth',
-            '*full.pth'
+            'metrics/metrics_best_dev_f1.json',
+            'metrics/metrics_best_dev_loss.json',
+            'metrics/metrics_full.json',
+            'models/best_dev_f1.pth',
+            'models/best_dev_loss.pth',
+            'models/full.pth'
         ]
         
         for pattern in required_files:
@@ -45,8 +46,7 @@ class SingleModelEvaluator:
                 raise FileNotFoundError(f"Required file matching {pattern} not found in {self.evaluation_dir}")
 
     def _load_metrics(self) -> Dict[str, Any]:
-        metrics_pattern = self.evaluation_dir / 'metrics_full.json'
-        metrics_file = list(self.evaluation_dir.glob(metrics_pattern.name))[0]
+        metrics_file = self.evaluation_dir / 'metrics' / 'metrics_full.json'
         
         try:
             with open(metrics_file, 'r') as f:
@@ -61,7 +61,7 @@ class SingleModelEvaluator:
             # Case 1: State dictionary format
             if isinstance(obj, dict) and all(isinstance(v, torch.Tensor) for v in obj.values()):
                 print(f"Loading model from state dict: {model_path.name}")
-                config = self._load_training_config()
+                config = self._load_trial_config()
                 model = self._create_model_from_config(config)
                 model.load_state_dict(obj)
                 return model
@@ -77,7 +77,7 @@ class SingleModelEvaluator:
         except Exception as e:
             raise RuntimeError(f"Failed to load model from {model_path}: {e}")
             
-    def _load_training_config(self) -> Dict[str, Any]:
+    def _load_trial_config(self) -> Dict[str, Any]:
         config_file = self.evaluation_dir / "config.yaml"
         if not config_file.exists():
             raise FileNotFoundError(f"Training config not found: {config_file}")
@@ -109,9 +109,10 @@ class SingleModelEvaluator:
         except Exception as e:
             raise RuntimeError(f"Failed to create model from config: {e}")
 
-    def _compute_confusion_matrix(self, model_type: str, test_config: Dict[str, Any] = None) -> np.ndarray:
+    def _compute_confusion_matrix(self, model_name, trial_config):
+        data_config = trial_config['data']
         
-        model_path = list(self.evaluation_dir.glob(f'*_{model_type}.pth'))[0]
+        model_path = self.evaluation_dir / 'models' / f'{model_name}.pth'
         model = self._load_model(model_path)
         model.eval()
         
@@ -119,10 +120,10 @@ class SingleModelEvaluator:
         model = model.to(device)
         
         # Setup test data
-        data_script = EEGDataScript(test_config)
+        data_script = EEGDataScript(data_config)
         _, test_dataset = data_script.get_datasets()
         
-        batch_size = len(test_dataset) if test_config['batch_size'] == -1 else test_config['batch_size']
+        batch_size = len(test_dataset) if data_config['dev_batch_size'] == -1 else data_config['dev_batch_size']
         test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
         
         predictions = []
@@ -145,8 +146,7 @@ class SingleModelEvaluator:
         
         return confusion_matrix(targets, predictions)
 
-    def _create_evaluation_plot(self, metrics: Dict[str, Any], best_f1_cf: np.ndarray, 
-                              best_loss_cf: np.ndarray) -> None:
+    def _create_evaluation_plot(self, metrics: Dict[str, Any], best_f1_cf: np.ndarray, best_loss_cf: np.ndarray) -> None:
         """Create and save the evaluation plot with metrics and confusion matrices."""
         fig, axes = plt.subplots(2, 2, figsize=(12, 8))
         
@@ -155,10 +155,10 @@ class SingleModelEvaluator:
             ax=axes[0, 0],
             train_data=metrics['train_loss'],
             val_data=metrics['dev_loss'],
-            best_value=metrics['best_loss_dev'],
+            best_value=metrics['best_dev_loss'],
             title='Loss vs Epochs',
             ylabel='Loss',
-            best_label=f'Best Dev Loss: {metrics["best_loss_dev"]:.3f}'
+            best_label=f'Best Dev Loss: {metrics["best_dev_loss"]:.3f}'
         )
         
         # Plot F1
@@ -166,10 +166,10 @@ class SingleModelEvaluator:
             ax=axes[0, 1],
             train_data=metrics['train_f1'],
             val_data=metrics['dev_f1'],
-            best_value=metrics['best_f1_dev'],
+            best_value=metrics['best_dev_f1'],
             title='F1 Score vs Epochs',
             ylabel='F1',
-            best_label=f'Best Dev F1: {metrics["best_f1_dev"]:.3f}'
+            best_label=f'Best Dev F1: {metrics["best_dev_f1"]:.3f}'
         )
         
         # Plot Confusion Matrices
@@ -194,20 +194,20 @@ class SingleModelEvaluator:
         ax.set_ylabel(ylabel)
         ax.legend()
 
-if __name__ == "__main__":
-    import argparse
+# if __name__ == "__main__":
+#     import argparse
     
-    parser = argparse.ArgumentParser(description="Evaluate single model training run")
-    parser.add_argument("eval_dir", type=str, help="Directory containing model evaluation results")
-    parser.add_argument("--batch_size", type=int, default=-1, help="Batch size for testing (-1 for full batch)")
-    parser.add_argument("--random_state", type=int, default=69, help="Random state for dataset split")
+#     parser = argparse.ArgumentParser(description="Evaluate single model training run")
+#     parser.add_argument("eval_dir", type=str, help="Directory containing model evaluation results")
+#     parser.add_argument("--batch_size", type=int, default=-1, help="Batch size for testing (-1 for full batch)")
+#     parser.add_argument("--random_state", type=int, default=69, help="Random state for dataset split")
     
-    args = parser.parse_args()
+#     args = parser.parse_args()
     
-    test_config = {
-        'batch_size': args.batch_size,
-        'random_state': args.random_state
-    }
+#     trial_config = {
+#         'batch_size': args.batch_size,
+#         'random_state': args.random_state
+#     }
     
-    evaluator = SingleModelEvaluator(args.eval_dir)
-    evaluator.evaluate(test_config)
+#     evaluator = SingleModelEvaluator(args.eval_dir)
+#     evaluator.evaluate(trial_config)

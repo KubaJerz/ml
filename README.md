@@ -186,9 +186,6 @@ evaluator = MultiModelEvaluator("/path/to/search/experiments")
 evaluator.evaluate()
 ```
 
-
-
-
 # IMPORTANT NOTES
 
 ## Random Search Configuration
