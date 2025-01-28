@@ -134,12 +134,29 @@ experiment:
 data:
   data_absolute_path: "/path/to/data"
   script_absolute_path: "/path/to/data_script.py"
+  use_full: True
+  use_percent: 0.10
+
   split_type: "train,dev"  # or "train,dev,test"
-  split_ratios: [0.8, 0.2]
+  split_ratios: [0.8, 0.2] # or [0.8, 0.1. 0.1]
+  shuffle: True
+  data_leakage: True
+  seed: 69
+  train_batch_size: 512
+  dev_batch_size: -1
+  test_batch_size: -1
+  #num_workers: 2
+  #pin_memory: true
+
   input_size: 1000
   input_channels: 1
   output_size: 10
   num_classes: 10
+```
+
+```yaml
+model:
+  absolute_path: "/path/to/basic_mlp.py"
 ```
 
 ### Training Configuration
@@ -151,6 +168,10 @@ training:
   learning_rate: 0.001
   criterion: "CrossEntropyLoss"
   device: "cuda"  # or "cpu"
+```
+```yaml
+parameters:
+  param: none
 ```
 
 ### Callbacks

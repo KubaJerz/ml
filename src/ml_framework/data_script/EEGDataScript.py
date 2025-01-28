@@ -1,10 +1,12 @@
-from typing import Tuple, List, Union
+from typing import Tuple, List, Union, Set, Dict
 import torch
 from torch.utils.data import Dataset, ConcatDataset, DataLoader, Subset
 from tqdm import tqdm
 from pathlib import Path
-from ..utils.validation_utils import validate_data_config
-from .BaseDataScript import BaseDataScript
+import re
+import warnings
+from ml_framework.utils.validation_utils import validate_data_config
+from ml_framework.data_script.BaseDataScript import BaseDataScript
 
 class EEGDataset(Dataset):
     """Dataset class for EEG data."""
@@ -21,18 +23,41 @@ class EEGDataset(Dataset):
         return self.n_samples
 
 class EEGDataScript(BaseDataScript):
-    """Implementation of data script for EEG data processing."""
+    """Implementation of data script for EEG data processing with data leakage prevention."""
     
     def __init__(self, config: dict):
         self.config = config
         validate_data_config(config)
         self.data_path = Path(self.config['data_absolute_path'])
-           
+        self.prevent_data_leakage = not self.config.get('data_leakage', True)
+        
+        if not self.config.get('use_full', True) and not self.prevent_data_leakage:
+            warnings.warn(
+                "Using partial dataset without data leakage prevention may still cause data leakage. "
+                "Consider enabling data_leakage prevention for more robust validation."
+            )
+    '''
+    If: we are to prevent data leakadge then we will scan the dir for unique rat id "000_*" or "001_*" then for 
+    each one we will split on the rat ID's:
+
+     If we have 10 rats and 70/30 split:
+        Train rats: ["000", "001", "002", "003", "004", "005", "006"]
+        Dev rats:   ["007", "008", "009"]
+
+    Then we oncat each set of rats intoa datset and shuffel within the datset.
+
+    Else: (with data leakadge) 
+        We load whole dataset then shuffel then split.
+    '''
+
     def get_datasets(self) -> Union[Tuple[Dataset, Dataset], Tuple[Dataset, Dataset, Dataset]]:
         """Get train/dev or train/dev/test dataset splits."""
-        full_dataset = self._load_datasets()
-        processed_dataset = self._process_dataset(full_dataset)
-        return self._split_dataset(processed_dataset)
+        if self.prevent_data_leakage:
+            return self._get_leakage_prevented_datasets()
+        else:
+            full_dataset = self._load_datasets()
+            processed_dataset = self._process_dataset(full_dataset)
+            return self._split_dataset(processed_dataset)
 
     def get_data_loaders(self) -> Union[Tuple[DataLoader, DataLoader], Tuple[DataLoader, DataLoader, DataLoader]]:
         """Get DataLoader objects for the datasets."""
@@ -50,6 +75,84 @@ class EEGDataScript(BaseDataScript):
                 self._create_loader(train_dataset, 'train_batch_size'),
                 self._create_loader(dev_dataset, 'dev_batch_size'),
                 self._create_loader(test_dataset, 'test_batch_size')
+            )
+
+    def _get_rat_ids(self) -> List[str]:
+        """Get sorted list of unique rat IDs from the data directory."""
+        pattern = r"(\d{3})_\d{2}\.pt"
+        rat_ids = set()
+        
+        for file_path in self.data_path.glob('*.pt'):
+            match = re.match(pattern, file_path.name)
+            if match:
+                rat_ids.add(match.group(1))
+                
+        return sorted(list(rat_ids))
+
+    def _split_rat_ids(self, rat_ids: List[str]) -> Union[Tuple[List[str], List[str]], 
+                                                         Tuple[List[str], List[str], List[str]]]:
+        """Split rat IDs according to the configured split ratios."""
+        if self.config.get('shuffle', True):
+            generator = torch.Generator().manual_seed(self.config['seed'])
+            indices = torch.randperm(len(rat_ids), generator=generator).tolist()
+            rat_ids = [rat_ids[i] for i in indices]
+
+        if self.config['split_type'] == "train,dev":
+            train_size = int(len(rat_ids) * self.config['split_ratios'][0])
+            return (
+                rat_ids[:train_size],
+                rat_ids[train_size:]
+            )
+        else:  # train,dev,test
+            train_ratio, dev_ratio = self.config['split_ratios'][:2]
+            train_size = int(len(rat_ids) * train_ratio)
+            dev_size = int(len(rat_ids) * (train_ratio + dev_ratio))
+            return (
+                rat_ids[:train_size],
+                rat_ids[train_size:dev_size],
+                rat_ids[dev_size:]
+            )
+
+    def _load_rat_data(self, rat_ids: List[str]) -> ConcatDataset:
+        all_datasets = []
+        for rat_id in rat_ids:
+            rat_files = sorted(self.data_path.glob(f'{rat_id}_*.pt'))
+            for file_path in rat_files:
+                try:
+                    dataset = EEGDataset(str(file_path))
+                    all_datasets.append(dataset)
+                except Exception as e:
+                    print(f"Error loading {file_path}: {str(e)}")
+                    continue
+
+        combined_dataset = ConcatDataset(all_datasets) if all_datasets else None
+        
+        # shuffle  combined dataset
+        if combined_dataset and self.config.get('shuffle', True):
+            generator = torch.Generator().manual_seed(self.config['seed'])
+            indices = torch.randperm(len(combined_dataset), generator=generator).tolist()
+            combined_dataset = Subset(combined_dataset, indices)
+            
+        return combined_dataset
+
+    def _get_leakage_prevented_datasets(self) -> Union[Tuple[Dataset, Dataset], 
+                                                      Tuple[Dataset, Dataset, Dataset]]:
+        """Create datasets with data leakage prevention."""
+        rat_ids = self._get_rat_ids()
+        split_ids = self._split_rat_ids(rat_ids)
+        
+        if self.config['split_type'] == "train,dev":
+            train_ids, dev_ids = split_ids
+            return (
+                self._load_rat_data(train_ids),
+                self._load_rat_data(dev_ids)
+            )
+        else:  # train,dev,test
+            train_ids, dev_ids, test_ids = split_ids
+            return (
+                self._load_rat_data(train_ids),
+                self._load_rat_data(dev_ids),
+                self._load_rat_data(test_ids)
             )
 
     def _load_datasets(self) -> ConcatDataset:
@@ -75,7 +178,8 @@ class EEGDataScript(BaseDataScript):
             return Subset(dataset, indices)
         return dataset
 
-    def _split_dataset(self, dataset: ConcatDataset) -> Union[Tuple[Dataset, Dataset], Tuple[Dataset, Dataset, Dataset]]:
+    def _split_dataset(self, dataset: ConcatDataset) -> Union[Tuple[Dataset, Dataset], 
+                                                             Tuple[Dataset, Dataset, Dataset]]:
         """Split the dataset into train/dev or train/dev/test."""
         if self.config.get('shuffle', True):
             generator = torch.Generator().manual_seed(self.config['seed'])

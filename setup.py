@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setup(
     name = "ml_framework",
-    version = "1.0.1",
+    version = "1.0.3",
     author = "Kuba Jerzmanowski",
     description = "A modular machine learning framework",
     long_description=long_description, 
