@@ -51,7 +51,7 @@ class TestValidationUtils:
         """Test validation of a complete, valid data configuration"""
         assert validate_data_config(valid_data_config) is True
 
-    @pytest.mark.parametrize("missing_field", ['script_name', 'split_type', 'split_ratios','shuffle', 'seed', 'input_size', 'input_channels', 'output_size', 'num_classes'])
+    @pytest.mark.parametrize("missing_field", ['data_absolute_path', 'script_absolute_path', 'split_type', 'split_ratios','shuffle', 'seed', 'input_size', 'input_channels', 'output_size', 'num_classes'])
     def test_validate_data_config_missing_fields(self, valid_data_config, missing_field):
         """Test validation fails when required fields are missing"""
         del valid_data_config[missing_field]
@@ -60,11 +60,11 @@ class TestValidationUtils:
 
     def test_validate_data_config_missing_absolute_path(self, valid_data_config):
         """Test validation fails when required fields are missing"""
-        del valid_data_config['absolute_path']
-        with pytest.raises(ValueError, match=f"Path must be absolute: No 'absolute_path' was provided"):
+        del valid_data_config['data_absolute_path']
+        with pytest.raises(ValueError, match=f"Missing data_absolute_path"):
             validate_data_config(valid_data_config)
 
-    @pytest.mark.parametrize("field, invalid_value, expected_type", [('script_name', 123, 'str'),('shuffle', 'true', 'bool'),('seed', 42.0, 'int'),('split_ratios', 0.8, 'list'), ('split_ratios', [0.8, 'invalid'], 'float')])
+    @pytest.mark.parametrize("field, invalid_value, expected_type", [('data_absolute_path', 123, 'str'),('shuffle', 'true', 'bool'),('seed', 42.0, 'int'),('split_ratios', 0.8, 'list'), ('split_ratios', [0.8, 'invalid'], 'float')])
     def test_validate_data_config_invalid_types(self, valid_data_config, field, invalid_value, expected_type):
         """Test validation fails with invalid field types"""
         valid_data_config[field] = invalid_value
@@ -73,19 +73,14 @@ class TestValidationUtils:
 
     def test_validate_data_config_invalid_path(self, valid_data_config):
         """Test validation fails with various invalid path scenarios"""
-        valid_data_config['absolute_path'] = 'relative/path'
+        valid_data_config['data_absolute_path'] = 'relative/path'
         with pytest.raises(ValueError, match="Path must be absolute"):
             validate_data_config(valid_data_config)
 
-        valid_data_config['absolute_path'] = '/path/does/not/exist'
-        with pytest.raises(FileNotFoundError, match="Data path does not exist"):
+        valid_data_config['data_absolute_path'] = '/path/does/not/exist'
+        with pytest.raises(FileNotFoundError, match=f"Path does not exist: {valid_data_config['data_absolute_path']}"):
             validate_data_config(valid_data_config)
 
-        # Test path with no .pt files
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            valid_data_config['absolute_path'] = str(Path(tmp_dir).absolute())
-            with pytest.raises(FileNotFoundError, match="No .pt files found"):
-                validate_data_config(valid_data_config)
 
     def test_validate_data_config_invalid_split_config(self, valid_data_config):
         valid_data_config['split_type'] = 'invalid'

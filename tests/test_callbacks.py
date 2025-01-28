@@ -5,10 +5,10 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 import tempfile
 import matplotlib.pyplot as plt
-from ml_framework.training.callbacks.BestMetricCallback import BestMetricCallback
-from ml_framework.training.callbacks.EarlyStoppingCallback import EarlyStoppingCallback
-from ml_framework.training.callbacks.PlotCombinedMetrics import PlotCombinedMetrics
-from ml_framework.training.callbacks.TrainingCompletionCallback import TrainingCompletionCallback
+from ml_framework.callbacks.BestMetricCallback import BestMetricCallback
+from ml_framework.callbacks.EarlyStoppingCallback import EarlyStoppingCallback
+from ml_framework.callbacks.PlotCombinedMetrics import PlotCombinedMetrics
+from ml_framework.callbacks.TrainingCompletionCallback import TrainingCompletionCallback
 
 class MockTrainingLoop:
     def __init__(self, metrics=None, current_epoch=0, total_epochs=10, save_dir=None, model=None, save_full_model=True):
@@ -42,7 +42,7 @@ class TestBestMetricCallback:
         assert callback.best_val == 0.3 
         assert training_loop.metrics['best_dev_loss'] == 0.3
 
-    @patch('ml_framework.training.callbacks.BestMetricCallback.save_model')
+    @patch('ml_framework.callbacks.BestMetricCallback.save_model')
     def test_save_called_once_management(self, mock_save, setup_for_fake_callbacks):
         callback = BestMetricCallback(best_value=0.5, metric_to_monitor='dev_loss')
         training_loop = MockTrainingLoop(**setup_for_fake_callbacks)
@@ -68,7 +68,7 @@ class TestEarlyStoppingCallback:
         #should stop training
         assert callback.on_epoch_end(training_loop) is False
 
-    @patch('ml_framework.training.callbacks.EarlyStoppingCallback.save_model')
+    @patch('ml_framework.callbacks.EarlyStoppingCallback.save_model')
     def test_model_saving_on_stop(self, mock_save, setup_for_fake_callbacks):
         """Test model saving when early stopping triggers"""
         callback = EarlyStoppingCallback(best_val_so_far=0.3, patience=0)
@@ -92,12 +92,12 @@ class TestPlotCombinedMetrics:
         callback = PlotCombinedMetrics(plot_live=False)
         training_loop = MockTrainingLoop(**setup_for_fake_PlotCombinedMetrics)
         
-        with patch('ml_framework.training.callbacks.PlotCombinedMetrics._plot') as mock_plot:
+        with patch('ml_framework.callbacks.PlotCombinedMetrics._plot') as mock_plot:
             callback.on_epoch_end(training_loop)
             mock_plot.assert_not_called()
 
 class TestTrainingCompletionCallback:
-    @patch('ml_framework.training.callbacks.TrainingCompletionCallback.save_model')
+    @patch('ml_framework.callbacks.TrainingCompletionCallback.save_model')
     def test_model_saving(self, mock_save, setup_for_fake_callbacks):
         """Test model saving at training completion"""
         callback = TrainingCompletionCallback()

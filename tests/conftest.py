@@ -32,8 +32,8 @@ def sample_good_config_path():
         
         "data": {
             # Data source configuration
-            "absolute_path": "/Users/kuba/Documents/data/Raw/pt_ekyn_500hz",
-            "script_name": "EEGDataScript",
+            'data_absolute_path': '/Users/kuba/Documents/data/Raw/pt_ekyn_500hz',
+            'script_absolute_path': '/Users/kuba/projects/ml/src/ml_framework/data_script/EEGDataScript.py',
             
             # Data sampling configuration
             "use_full": True,
@@ -61,7 +61,7 @@ def sample_good_config_path():
         },
 
         "parameters": {
-                "depth": 5
+            "depth": 5
         },
         
         "training": {
@@ -80,7 +80,8 @@ def sample_good_config_path():
         
         "callbacks": {
             # Visualization callbacks
-            "plot_metrics_live": False,
+            "plot_combined_metrics": True,
+            "plot_metrics_live": True,
             
             # Model saving callbacks
             "best_f1": True,
@@ -105,6 +106,9 @@ def samp_good_config():
     temp_dir = tempfile.mkdtemp()
     pt_file = Path(temp_dir+'/temp_for_test.pt')
     pt_file.touch()
+
+    temp_model = Path(temp_dir+'/temp_model.pt')
+    temp_model.touch()
     config = {
         "experiment": {
             "name": "tester00",
@@ -114,8 +118,8 @@ def samp_good_config():
         
         "data": {
             # Data source configuration
-            "absolute_path": str(temp_dir), # "/Users/kuba/Documents/data/Raw/pt_ekyn_500hz",
-            "script_name": "EEGDataScript",
+            "data_absolute_path": str(temp_dir), # "/Users/kuba/Documents/data/Raw/pt_ekyn_500hz",
+            'script_absolute_path': '/Users/kuba/projects/ml/src/ml_framework/data_script/EEGDataScript.py',
             
             # Data sampling configuration
             "use_full": True,
@@ -140,7 +144,7 @@ def samp_good_config():
         },
         
         "model": {
-            "absolute_path": "/Users/kuba/projects/ml-test/tests/does_not_exist.py"
+            "absolute_path": str(temp_model)
         },
 
         "parameters": {
@@ -163,7 +167,8 @@ def samp_good_config():
         
         "callbacks": {
             # Visualization callbacks
-            "plot_metrics_live": False,
+            "plot_combined_metrics": True,
+            "plot_metrics_live": True,
             
             # Model saving callbacks
             "best_f1": True,
@@ -178,12 +183,14 @@ def samp_good_config():
     yield config
     if pt_file.exists():
         pt_file.unlink()
+    # if temp_model.exists():
+    #     temp_model.unlink()
 
 @pytest.fixture
 def valid_data_config_without_test():
     return {
-        "absolute_path": "/Users/kuba/Documents/data/Raw/pt_ekyn_500hz",
-        "script_name": "EEGDataScript",
+        "data_absolute_path": "/Users/kuba/Documents/data/Raw/pt_ekyn_500hz",
+        "script_absolute_path": "/Users/kuba/projects/ml/src/ml_framework/data_script/EEGDataScript.py",
         
         # Data sampling configuration
         "use_full": False,
@@ -209,8 +216,8 @@ def valid_data_config_without_test():
 @pytest.fixture
 def valid_data_config_with_test():
     return {
-        "absolute_path": "/Users/kuba/Documents/data/Raw/pt_ekyn_500hz",
-        "script_name": "EEGDataScript",
+        "data_absolute_path": "/Users/kuba/Documents/data/Raw/pt_ekyn_500hz",
+        "script_absolute_path": "/Users/kuba/projects/ml/src/ml_framework/data_script/EEGDataScript.py",
         
         # Data sampling configuration
         "use_full": True,
@@ -237,8 +244,8 @@ def valid_data_config_with_test():
 @pytest.fixture
 def invalid_datasplit_config_without_test():
     return {
-        "absolute_path": "/Users/kuba/Documents/data/Raw/pt_ekyn_500hz",
-        "script_name": "EEGDataScript",
+        "data_absolute_path": "/Users/kuba/Documents/data/Raw/pt_ekyn_500hz",
+        "script_absolute_path": "/Users/kuba/projects/ml/src/ml_framework/data_script/EEGDataScript.py",
         
         # Data sampling configuration
         "use_full": False,
@@ -264,8 +271,8 @@ def invalid_datasplit_config_without_test():
 @pytest.fixture
 def invalid_datasplit_config_with_test():
     return {
-        "absolute_path": "/Users/kuba/Documents/data/Raw/pt_ekyn_500hz",
-        "script_name": "EEGDataScript",
+        "data_absolute_path": "/Users/kuba/Documents/data/Raw/pt_ekyn_500hz",
+        "script_absolute_path": "/Users/kuba/projects/ml/src/ml_framework/data_script/EEGDataScript.py",
         
         # Data sampling configuration
         "use_full": False,
@@ -292,8 +299,8 @@ def invalid_datasplit_config_with_test():
 @pytest.fixture
 def invalid_data_config_with_test():
     return {
-        "absolute_path": "/Users/kuba/Documents/data/Raw/pt_ekyn_500hz",
-        "script_name": "EEGDataScript",
+        "data_absolute_path": "/Users/kuba/Documents/data/Raw/pt_ekyn_500hz",
+        "script_absolute_path": "/Users/kuba/projects/ml/src/ml_framework/data_script/EEGDataScript.py",
         
         "use_full": False,
         "use_percent": 0.15,
@@ -400,7 +407,7 @@ def setup_for_fake_PlotCombinedMetrics():
 def valid_core_config():
     """Fixture for a valid core configuration"""
     with tempfile.TemporaryDirectory() as tmp_dir:
-        return {
+        yield {
             'experiment': {
                 'name': 'test_experiment',
                 'mode': 'single',
@@ -420,8 +427,8 @@ def valid_data_config():
     pt_file = Path(temp_dir+'/temp_for_test.pt')
     pt_file.touch()
     yield {
-        'absolute_path': str(temp_dir),
-        'script_name': 'test_script',
+        "data_absolute_path": "/Users/kuba/Documents/data/Raw/pt_ekyn_500hz",
+        "script_absolute_path": "/Users/kuba/projects/ml/src/ml_framework/data_script/EEGDataScript.py",
         'split_type': 'train,dev',
         'split_ratios': [0.8, 0.2],
         'shuffle': True,

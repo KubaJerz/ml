@@ -39,7 +39,7 @@ class TestBaseDataScript:
 
     def test_missing_required_fields(self):
         invalid_config = {'split_type': 'train,dev'}
-        with pytest.raises(ValueError, match="Path must be absolute: No 'absolute_path' was provided"):
+        with pytest.raises(ValueError, match="Missing data_absolute_path"):
             FakeDataScript(invalid_config)
 
     def test_invalid_data_types(self, invalid_data_config_with_test):
