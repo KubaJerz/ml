@@ -153,6 +153,7 @@ data:
   output_size: 10
   num_classes: 10
 ```
+### Model Configuration
 
 ```yaml
 model:
@@ -169,6 +170,10 @@ training:
   criterion: "CrossEntropyLoss"
   device: "cuda"  # or "cpu"
 ```
+
+### Hyperparameter Configuration:
+These get unpacked in the model constructor
+
 ```yaml
 parameters:
   param: none
