@@ -4,6 +4,7 @@ from torcheval.metrics.functional import multiclass_f1_score
 from tqdm import tqdm
 import torch
 
+
 class TrainingLoop(TrainLoopStrategy):
     """Training loop without validation."""
     def fit(self) -> Dict[str, float]:        
@@ -13,6 +14,7 @@ class TrainingLoop(TrainLoopStrategy):
         self.model = self.model.to(self.device)
 
         for epoch in tqdm(range(self.total_epochs), desc='Progress: '):
+
             self.current_epoch = epoch
             
             if not self._call_callbacks('on_epoch_start', training_loop=self):
@@ -23,21 +25,18 @@ class TrainingLoop(TrainLoopStrategy):
             epoch_f1 = 0.0
             
             # training loop
-            for X_batch, y_batch in self.train_loader:
+            for i, (X_batch, y_batch) in enumerate(self.train_loader):
                 if not self._call_callbacks('on_batch_start', training_loop=self, batch=(X_batch, y_batch)):
                     break
 
                 X_batch, y_batch = X_batch.to(self.device), y_batch.to(self.device)
                 
-                self.optimizer.zero_grad()
                 out = self.model.forward(X_batch)
                 if len(y_batch.shape) > 1:  # Check if one-hot encoded
                     y_batch = torch.argmax(y_batch, dim=1)
 
                 loss = self.criterion(out, y_batch)
                 f1 = multiclass_f1_score(out, y_batch, num_classes=self.model.num_classes, average="macro").item()
-                loss.backward()
-                self.optimizer.step()
                 
                 epoch_loss += loss.item()
                 epoch_f1 += f1
@@ -48,6 +47,7 @@ class TrainingLoop(TrainLoopStrategy):
                 }
                 if not self._call_callbacks('on_batch_end', training_loop=self, batch_metrics=batch_metrics):
                     break
+
             self.metrics['train_loss'].append(epoch_loss / len(self.train_loader))
             self.metrics['train_f1'].append(epoch_f1 / len(self.train_loader))
 
@@ -68,6 +68,10 @@ class TrainingLoop(TrainLoopStrategy):
                     dev_epoch_f1 += dev_f1
             self.metrics['dev_loss'].append(dev_epoch_loss / len(self.dev_loader))
             self.metrics['dev_f1'].append(dev_epoch_f1 / len(self.dev_loader))
+
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()
 
             
             if not self._call_callbacks('on_epoch_end', training_loop=self):
