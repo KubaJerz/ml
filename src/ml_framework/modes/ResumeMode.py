@@ -65,11 +65,11 @@ class ResumeMode(SingleMode):
         model_path = Path(self.config['resume']['model_path'])
         try:
 
-            model = super()._setup_model()
             obj = torch.load(model_path, map_location='cpu')
 
             if isinstance(obj, dict) and all(isinstance(v, torch.Tensor) for v in obj.values()):
                 print("Loading model from state dict.")
+                model = super()._setup_model()
                 model.load_state_dict(obj)
                 return model
             elif hasattr(obj, "state_dict"):
