@@ -46,6 +46,9 @@ class SingleMode(ExperimentMode):
         path_to_model = self.config['model'].get('absolute_path')
         model_class = import_from_path(path_to_model)
 
+        # register in sys.modules so torch.load can find it
+        sys.modules[model_class.__name__] = model_class
+
         model_params = {
                     'input_size': self.config['data']['input_size'],
                     'input_channels': self.config['data']['input_channels'],

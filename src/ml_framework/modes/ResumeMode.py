@@ -3,6 +3,7 @@ import json
 from .SingleMode import SingleMode
 import torch
 from ..utils.validation_utils import check_section_exists, validate_mode_config, check_field, validate_metrics_file_format, validate_path_is_absolute, validate_path_exists
+import sys
 import warnings
 
 class ResumeMode(SingleMode):
@@ -63,11 +64,16 @@ class ResumeMode(SingleMode):
     def _setup_model(self):
         model_path = Path(self.config['resume']['model_path'])
         try:
-            obj = torch.load(model_path)
+
+            model = super()._setup_model()
+            if type(model).__name__ not in sys.modules:
+                raise RuntimeError("Model class must be registered before loading. Do not move the super() call.")
+
+
+            obj = torch.load(model_path, map_location='cpu')
 
             if isinstance(obj, dict) and all(isinstance(v, torch.Tensor) for v in obj.values()):
                 print("Loading model from state dict.")
-                model = super()._setup_model()
                 model.load_state_dict(obj)
                 return model
             elif hasattr(obj, "state_dict"):
