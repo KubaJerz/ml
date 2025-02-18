@@ -46,9 +46,6 @@ class SingleMode(ExperimentMode):
         path_to_model = self.config['model'].get('absolute_path')
         model_class = import_from_path(path_to_model)
 
-        # register in sys.modules so torch.load can find it
-        sys.modules[model_class.__name__] = model_class
-
         model_params = {
                     'input_size': self.config['data']['input_size'],
                     'input_channels': self.config['data']['input_channels'],
@@ -72,6 +69,7 @@ class SingleMode(ExperimentMode):
 
         training_params = self._get_training_parameters()
         training_components = self._initialize_training_components(model)
+        print(training_params)
         return self._create_training_loop(model=model, dataloaders=dataloaders, training_params=training_params, **training_components)
 
     def _get_training_parameters(self) -> Dict[str, Any]:
@@ -81,7 +79,7 @@ class SingleMode(ExperimentMode):
             'total_epochs': training_config.get('epochs', 100),
             'device': device,
             'save_dir': self.dir,
-            'save_full_model': training_config.get('save_full_model', True)
+            'save_full_model': training_config.get('save_full_model', False)
         }
     
     def _get_valid_device(self, requested_device) -> str:

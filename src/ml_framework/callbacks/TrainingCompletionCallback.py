@@ -20,3 +20,4 @@ class TrainingCompletionCallback(Callback):
     
     def on_training_end(self, training_loop=None) -> bool:
         save_model(model=training_loop.model, metrics=training_loop.metrics, name=f'full', save_dir=training_loop.save_dir , save_full_model=training_loop.save_full_model)
+        print(f"Experiment saved at:{training_loop.save_dir}")

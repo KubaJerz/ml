@@ -5,7 +5,7 @@ from ..utils.SpecificMessageFilter import SpecificMessageFilter
 import logging
 
 class TrainLoopStrategy(ABC):
-    def __init__(self, model, device, optimizer, criterion, metrics, callbacks, save_dir, train_loader, dev_loader, total_epochs, test_loader=None, save_full_model=False):
+    def __init__(self, model, device, optimizer, criterion, metrics, callbacks, save_dir, train_loader, dev_loader, total_epochs, save_full_model, test_loader=None):
         self.model = model
         self.device = device
         self.optimizer = optimizer

@@ -66,10 +66,6 @@ class ResumeMode(SingleMode):
         try:
 
             model = super()._setup_model()
-            if type(model).__name__ not in sys.modules:
-                raise RuntimeError("Model class must be registered before loading. Do not move the super() call.")
-
-
             obj = torch.load(model_path, map_location='cpu')
 
             if isinstance(obj, dict) and all(isinstance(v, torch.Tensor) for v in obj.values()):
