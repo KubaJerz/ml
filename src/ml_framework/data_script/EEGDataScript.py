@@ -29,7 +29,7 @@ class EEGDataScript(BaseDataScript):
         self.config = config
         validate_data_config(config)
         self.data_path = Path(self.config['data_absolute_path'])
-        self.prevent_data_leakage = not self.config.get('data_leakage', True)
+        self.prevent_data_leakage = not self.config.get('prevent_data_leakage', True)
         
         if not self.config.get('use_full', True) and not self.prevent_data_leakage:
             warnings.warn(

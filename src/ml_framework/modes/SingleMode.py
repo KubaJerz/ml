@@ -69,7 +69,6 @@ class SingleMode(ExperimentMode):
 
         training_params = self._get_training_parameters()
         training_components = self._initialize_training_components(model)
-        print(training_params)
         return self._create_training_loop(model=model, dataloaders=dataloaders, training_params=training_params, **training_components)
 
     def _get_training_parameters(self) -> Dict[str, Any]:
