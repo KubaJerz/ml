@@ -140,7 +140,7 @@ data:
   split_type: "train,dev"  # or "train,dev,test"
   split_ratios: [0.8, 0.2] # or [0.8, 0.1. 0.1]
   shuffle: True
-  data_leakage: True
+  prevent_data_leakage: True
   seed: 69
   train_batch_size: 512
   dev_batch_size: -1
