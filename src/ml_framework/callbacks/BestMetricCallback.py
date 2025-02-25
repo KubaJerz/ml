@@ -28,6 +28,7 @@ class BestMetricCallback(Callback):
             self.best_val = current_val
             training_loop.metrics[f'best_{self.metric_to_monitor}'] = current_val
             save_model(model=training_loop.model, metrics=training_loop.metrics, name=f'best_{self.metric_to_monitor}', save_dir=training_loop.save_dir , save_full_model=training_loop.save_full_model)
+            print(f"Best {self.metric_to_monitor} at epoch:{training_loop.current_epoch}")
         return True
        
     def on_training_end(self, training_loop=None) -> bool:

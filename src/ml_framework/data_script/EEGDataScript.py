@@ -29,13 +29,13 @@ class EEGDataScript(BaseDataScript):
         self.config = config
         validate_data_config(config)
         self.data_path = Path(self.config['data_absolute_path'])
-        self.prevent_data_leakage = not self.config.get('prevent_data_leakage', True)
+        self.prevent_data_leakage = self.config.get('prevent_data_leakage', True)
         
-        if not self.config.get('use_full', True) and not self.prevent_data_leakage:
+        if not self.config.get('use_full', True) and self.prevent_data_leakage:
             warnings.warn(
                 "Using partial dataset without data leakage prevention may still cause data leakage. "
-                "Consider enabling data_leakage prevention for more robust validation."
-            )
+                "Consider enabling data_leakage prevention for more robust validation.")
+            
     '''
     If: we are to prevent data leakadge then we will scan the dir for unique rat id "000_*" or "001_*" then for 
     each one we will split on the rat ID's:
@@ -146,12 +146,14 @@ class EEGDataScript(BaseDataScript):
         
         if self.config['split_type'] == "train,dev":
             train_ids, dev_ids = split_ids
+            print(f"Training on rat:{train_ids}\nDev on rats:{dev_ids}")
             return (
                 self._load_rat_data(train_ids),
                 self._load_rat_data(dev_ids)
             )
         else:  # train,dev,test
             train_ids, dev_ids, test_ids = split_ids
+            print(f"Training on rat:{train_ids}\nDev on rats:{dev_ids}\nTesting on rats:{test_ids}")
             return (
                 self._load_rat_data(train_ids),
                 self._load_rat_data(dev_ids),
